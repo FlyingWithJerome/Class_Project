@@ -7,9 +7,40 @@ SKIP_LIST = [int(ipaddress.IPv4Address("0.0.0.0")),
 		range(int(ipaddress.IPv4Address("192.168.0.1")),int(ipaddress.IPv4Address("192.168.255.255"))),
 		int(ipaddress.IPv4Address("127.0.0.1"))]
 
-def call_dig(server:int) -> str:
-	print("dig case.edu @{}".format(str(ipaddress.IPv4Address(server))).split())
-	return subprocess.check_call("dig case.edu @{}".format(str(ipaddress.IPv4Address(server))).split())
+
+def make_dns_packet():
+	'''
+	make a customize udp packet (for dns query, carries a message to
+	system admins)
+	'''
+	pass
+
+def make_datagram_socket() -> socket.socket:
+	'''
+	make a udp socket with our options. 
+	'''
+	pass
+
+def send_packet(packet, ip_address:ip_address.IPv4Address) -> None:
+	'''
+	send a dns packet to the server and wait for response.
+	'''
+	pass
+
+def multiprocess_scan(start_ip:int, end_ip:int, process_num:int) -> None:
+	'''
+	scan the IPv4 address space from [start_ip] to [end_ip]
+	with [process_num] of processes simultaneously
+	'''
+	pass
+
+
+#====================== Private Methods ====================================
+
+def _check_skip_policy(ip_address:int) -> bool:
+	pass
+
+
 
 
 #16777217
