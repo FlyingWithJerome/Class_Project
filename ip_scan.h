@@ -33,8 +33,8 @@ private:
         uint16_t ans_counts     = 0x0000;
         uint16_t auth_counts    = 0x0000;
         uint16_t add_counts     = 0x0100;
-        char query           = 0x0c;
-        char target[10]      = "case.edu";
+        //char query           = 0x02;
+        char target[10]      = "\04case\03edu";
         // uint8_t ending          = 0x00;
         uint16_t type_          = 0x0100;
         uint16_t class_         = 0x0100;
