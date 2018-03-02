@@ -4,7 +4,8 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <pthread.h>
-
+#include <arpa/inet.h>
+#include <unistd.h>
 #include <string>
 
 
@@ -20,19 +21,35 @@ public:
 
     void set_target(const std::string target); //set the website to be queried
 
-    bool is_working(const std::string dns_server) const; //check if a dns server is working
+    bool is_working(sockaddr_in dns_server) const; //check if a dns server is working
 
 private:
+
+    struct packet
+    {
+        uint16_t transaction_id = 0xffff;
+        uint16_t control 	    = 0x0100;
+        uint16_t q_counts       = 0x0001;
+        uint16_t ans_counts     = 0x0000;
+        uint16_t auth_counts    = 0x0000;
+        uint16_t add_counts     = 0x0001;
+        uint8_t query           = 0x0c;
+        uint8_t target[10]      = "case.edu";
+        // uint8_t ending          = 0x00;
+        uint16_t type_          = 0x0001;
+        uint16_t class_         = 0x0001;
+        uint8_t message[50]     = "Fuck you";
+    };
 
     int outbound_socket;
 
     int inbound_socket;
 
-    std::string packet_for_everyone;
+    packet packet_for_everyone;
 
-    std::string make_dns_packet();
+    packet make_dns_packet();
 
-    bool send_request(const std::string dns_server) const;
+    bool send_request(sockaddr_in dns_server) const;
 
     void do_with_multithreading(const int thread_num) const;
 
@@ -41,17 +58,5 @@ private:
 
 
 };
-
-Query::Query()
-{
-    // this -> packet_for_everyone = make_dns_packet();
-    this -> outbound_socket     = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    this -> inbound_socket      = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-}
-
-Query::~Query()
-{
-
-}
 
 #endif
