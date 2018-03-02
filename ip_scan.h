@@ -7,7 +7,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <string>
-
+#include <wchar.h>
 
 
 #ifndef IP_SCAN_
@@ -28,17 +28,17 @@ private:
     struct packet
     {
         uint16_t transaction_id = 0xffff;
-        uint16_t control 	    = 0x0100;
-        uint16_t q_counts       = 0x0001;
+        uint16_t control 	    = 0x0001;
+        uint16_t q_counts       = 0x0100;
         uint16_t ans_counts     = 0x0000;
         uint16_t auth_counts    = 0x0000;
-        uint16_t add_counts     = 0x0001;
-        uint8_t query           = 0x0c;
-        uint8_t target[10]      = "case.edu";
+        uint16_t add_counts     = 0x0100;
+        char query           = 0x0c;
+        char target[10]      = "case.edu";
         // uint8_t ending          = 0x00;
-        uint16_t type_          = 0x0001;
-        uint16_t class_         = 0x0001;
-        uint8_t message[50]     = "Fuck you";
+        uint16_t type_          = 0x0100;
+        uint16_t class_         = 0x0100;
+        char message[50]     = "Fuck you";
     };
 
     int outbound_socket;
