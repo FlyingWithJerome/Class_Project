@@ -7,7 +7,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <string>
-#include <wchar.h>
+#include <cerrno>
 
 
 #ifndef IP_SCAN_
@@ -33,12 +33,10 @@ private:
         uint16_t ans_counts     = 0x0000;
         uint16_t auth_counts    = 0x0000;
         uint16_t add_counts     = 0x0100;
-        //char query           = 0x02;
         char target[10]      = "\04case\03edu";
-        // uint8_t ending          = 0x00;
         uint16_t type_          = 0x0100;
         uint16_t class_         = 0x0100;
-        char message[50]     = "Fuck you";
+        char message[50]     = "Tell me, senpai!";
     };
 
     int outbound_socket;
@@ -53,7 +51,7 @@ private:
 
     void do_with_multithreading(const int thread_num) const;
 
-    bool listen_and_check_result(const std::string& result) const;
+    bool listen_and_check_result() const;
 
 
 

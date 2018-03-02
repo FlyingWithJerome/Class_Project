@@ -34,17 +34,51 @@ bool Query::is_working(sockaddr_in dns_server) const
 
 bool Query::send_request(sockaddr_in dns_server) const
 {
-    if(bind(outbound_socket, (struct sockaddr*)&dns_server, sizeof(dns_server)) < 0)
+    struct sockaddr_in dest;
+
+    dest.sin_addr.s_addr = inet_addr("172.20.38.75");
+
+    dest.sin_family = AF_INET;
+
+    dest.sin_port = htons(1053);
+
+    if(bind(outbound_socket, (struct sockaddr*)&dest, sizeof(dest)) < 0)
+    {
+
+        printf("%s\n", strerror(errno));
+
         printf("Bind FAILED\n");
 
+        return false;
+    }
+
     if(connect(outbound_socket, (struct sockaddr*)&dns_server, sizeof(dns_server)) < 0)
+    {
         printf("Connect FAILED\n");
 
-    if(send(outbound_socket, &packet_for_everyone, 1000, NULL) < 0)
+        return false;
+    }
+
+    if(send(outbound_socket, &packet_for_everyone, 400, NULL) < 0)
+    {
         printf("Send FAILED\n");
 
+        return false;
+    }
 
-    return false;
+    return true and listen_and_check_result();
+}
+
+bool Query::listen_and_check_result() const
+{
+    char recv_buffer[1024];
+
+    recv(outbound_socket, recv_buffer, sizeof(Query::packet), NULL);
+
+    if(strlen(recv_buffer))
+        printf("%s\n", recv_buffer);
+
+    return true;
 }
 
 int main()
@@ -52,8 +86,11 @@ int main()
     Query query = Query();
 
     struct sockaddr_in dest;
+
     dest.sin_addr.s_addr = inet_addr("8.8.8.8");
+
     dest.sin_family = AF_INET;
+
     dest.sin_port = htons(53);
 
     query.is_working(dest);
