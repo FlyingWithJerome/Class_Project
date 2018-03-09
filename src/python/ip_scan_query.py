@@ -81,10 +81,10 @@ class Query(object):
         Nothing exciting, just a loop
         '''
         skip_list = SkipList()
-        skip_list.remove_address("127.0.0.0/8")
+
         try:
             for ip in self.ip_range:
-                if not skip_list.should_skip(ipaddress.IPv4Address(ip)):
+                if skip_list.is_valid(ipaddress.IPv4Address(ip)):
                     self.run_dig(ipaddress.IPv4Address(ip))
 
         except KeyboardInterrupt:
@@ -121,17 +121,31 @@ class MultiprocessQuery(object):
         start_ip = int(ipaddress.IPv4Address(start_ip))
         end_ip   = int(ipaddress.IPv4Address(end_ip))
 
-        self.job_assignment = np.array_split(np.array(range(start_ip, end_ip + 1)), process_num)
+        # split ip intervals for each workers
+
+        interval_length = (end_ip - start_ip) // process_num
+        breakpoints     = [start_ip]
+        
+        for point_index in range(process_num):
+
+            next_point = (start_ip + interval_length * (point_index + 1))
+
+            if next_point < (end_ip + 1):
+                breakpoints.append(next_point)
+                
+            else:
+                breakpoints.append(end_ip + 1)
+
         self.job_assignment = [
                                 {
-                                "start_ip" : int(job[0]), 
-                                "end_ip"   : int(job[-1]), 
+                                "start_ip" : int(breakpoints[i]), 
+                                "end_ip"   : int(breakpoints[i+1]), 
                                 "tcp"      :True, 
                                 "trace"    :True
                                 } 
-                                for job in self.job_assignment]
+                                for i in range(len(breakpoints)-1)]
 
-        self.empty_result = Result()
+        self.empty_result = Result()        
 
 
     @staticmethod
@@ -192,15 +206,14 @@ class SkipList(object):
             pass
 
 
-    def should_skip(self, ip_address:ipaddress.IPv4Address):
+    def is_valid(self, ip_address:ipaddress.IPv4Address):
         '''
         check if an address is in skip list
         '''
         for tricky_ip in SkipList.skip_list:
             if ip_address in ipaddress.IPv4Network(tricky_ip):
-                return True
-
-        return False
+                return False
+        return True
 
 
 if __name__ == "__main__":
