@@ -14,9 +14,8 @@ def make_dns_packet():
 	make a customize udp packet (for dns query, carries a message to
 	system admins)
 	'''
-	message = "For a Research @Case Western Reserve, Plz Contact jxm959@case.edu"
+	message = "Tell me, senpai!\0"
 	message = bytes(message, "ASCII")
-
 
 	transaction_id = 0xffff # 2 byte short
 	control 	   = 0x0100
@@ -24,16 +23,17 @@ def make_dns_packet():
 	ans_counts     = 0x0000
 	auth_counts    = 0x0000
 	add_counts     = 0x0000 # 2 byte short
-	query          = 0x0c
 	type_          = 0x0001 # 2 byte short (A)
 	class_         = 0x0001 # 2 byte short (IN)
+	query_website  = bytes("\4case\3edu\0", "ASCII")
 
-	query_website  = bytes("case.edu", "ASCII")
+	format_= "!HH4H%ds2H%ds"%(len(query_website), len(message))
 
-	format_= "!hh4h"
+	header = struct.pack("!6H", transaction_id, control, q_counts, ans_counts, auth_counts, add_counts)
 
+	question_section = struct.pack("!%ds2H"%len(query_website), query_website, type_, class_)
 
-
+	return header + question_section
 
 
 def make_datagram_sockets() -> (socket.socket, socket.socket):
@@ -50,8 +50,7 @@ def make_datagram_sockets() -> (socket.socket, socket.socket):
 
 
 
-
-def listen_and_check_response(in_socket: socket.socket, out_socket: socket.socket, packet, ip_address:ip_address.IPv4Address) -> bool:
+def listen_and_check_response(in_socket: socket.socket, out_socket: socket.socket, packet, ip_address:ipaddress.IPv4Address) -> bool:
 	'''
 	listen to the server side response and check whether it is a legal &
 	valid response
@@ -76,22 +75,16 @@ def _check_skip_policy(ip_address:int) -> bool:
 
 #16777217
 def main() -> None:
-	start_ip = int(ipaddress.IPv4Address(sys.argv[1]))
-	end_ip = int(ipaddress.IPv4Address(sys.argv[2]))
-	for num in range(start_ip,end_ip):
-		flag = True
-		for banned in SKIP_LIST:
-			if isinstance(banned,range) and num in banned:
-				flag = False
-				break
-			elif num == banned:
-				flag = False
-				break
-		if (flag):
-			try:
-				print(call_dig(num))
-			except:
-				print("Failed!")
+
+	out_sock, in_sock = make_datagram_sockets()
+
+	out_sock.bind(("192.168.0.7", 1053))
+
+	out_sock.connect(("8.8.8.8", 53))
+
+	packet = make_dns_packet()
+
+	out_sock.send(packet)
 	
 
 
