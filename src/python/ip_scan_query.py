@@ -198,7 +198,6 @@ class SkipList(object):
         '''
         for tricky_ip in SkipList.skip_list:
             if ip_address in ipaddress.IPv4Network(tricky_ip):
-                print(tricky_ip)
                 return True
 
         return False
