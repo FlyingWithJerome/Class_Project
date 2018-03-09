@@ -68,7 +68,7 @@ class Query(object):
             status     = self.check_stdoutput(str(raw_output))
 
         except subprocess.CalledProcessError as error:
-            status = "Execute FAILED, Return Code %d"%(error.returncode)
+            status = "Execution FAILED, Return Code %d"%(error.returncode)
 
         self.output_object.append_result([ip_address, 
                                    self.tcp_option,
@@ -80,12 +80,12 @@ class Query(object):
         '''
         Nothing exciting, just a loop
         '''
-        # skip_list = SkipList()
-        # skip_list.remove_address("127.0.0.0/8")
+        skip_list = SkipList()
+        skip_list.remove_address("127.0.0.0/8")
         try:
             for ip in self.ip_range:
-                # if skip_list.should_skip(ipaddress.IPv4Address(ip)):
-                self.run_dig(ipaddress.IPv4Address(ip))
+                if not skip_list.should_skip(ipaddress.IPv4Address(ip)):
+                    self.run_dig(ipaddress.IPv4Address(ip))
 
         except KeyboardInterrupt:
             pass
@@ -100,13 +100,13 @@ class Query(object):
         if output_string:
 
             if ";; ANSWER SECTION:" not in output_string and self.trace_option != "trace":
-                return "Execute OK, Not Returning Answer"
+                return "Execution OK, Not Returning Answer"
 
             if "IN A" in output_string and self.ip_address not in output_string:
-                return "Execute OK, Returning Wrong Answer"
+                return "Execution OK, Returning Wrong Answer"
 
             if self.ip_address in output_string:
-                return "Execute OK, Answer OK"
+                return "Execution OK, Answer OK"
 
         else:
             return "Unknown Error"
@@ -114,7 +114,7 @@ class Query(object):
 
 class MultiprocessQuery(object):
     
-    def __init__(self, start_ip:str, end_ip:str, process_num=4):
+    def __init__(self, start_ip:str, end_ip:str, tcp=False, trace=False, process_num=4):
         self.process_num = process_num
         assert start_ip and end_ip, "start ip and end ip should not be empty"
 
@@ -146,7 +146,8 @@ class MultiprocessQuery(object):
 
     def run(self):
         '''
-        execute the jobs concurrently
+        execute the jobs concurrently and write the results to
+        a csv file
         '''
         with concurrent.futures.ProcessPoolExecutor(self.process_num) as master:
             job_query = [master.submit(MultiprocessQuery.query_wrapper, arg) 
@@ -161,42 +162,41 @@ class MultiprocessQuery(object):
 
 class SkipList(object):
 
-    def __init__(self):
-        self.skip_list = \
-            [
-                "0.0.0.0/8",
-                "10.0.0.0/8",
-                "100.64.0.0/10",
-                "127.0.0.0/8",
-                "169.254.0.0/16",
-                "172.16.0.0/12",
-                "192.0.0.0/24",
-                "192.0.2.0/24",
-                "192.88.99.0/24",
-                "192.168.0.0/16",
-                "198.18.0.0/15",
-                "198.51.100.0/24",
-                "203.0.113.0/24",
-                "224.0.0.0/4",
-                "240.0.0.0/4",
-                "255.255.255.255"
-            ] 
+    skip_list = \
+        [
+            "0.0.0.0/8",
+            "10.0.0.0/8",
+            "100.64.0.0/10",
+            "127.0.0.0/8",
+            "169.254.0.0/16",
+            "172.16.0.0/12",
+            "192.0.0.0/24",
+            "192.0.2.0/24",
+            "192.88.99.0/24",
+            "192.168.0.0/16",
+            "198.18.0.0/15",
+            "198.51.100.0/24",
+            "203.0.113.0/24",
+            "224.0.0.0/4",
+            "240.0.0.0/4",
+            "255.255.255.255"
+        ] 
 
     def remove_address(self, ip_address:ipaddress.IPv4Address):
         '''
         remove an address from the skip list
         '''
         try:
-            self.skip_list.remove(str(ip_address))
+            SkipList.skip_list.remove(str(ip_address))
         except ValueError:
             pass
 
 
     def should_skip(self, ip_address:ipaddress.IPv4Address):
         '''
-        check if an address in skip
+        check if an address is in skip list
         '''
-        for tricky_ip in self.skip_list:
+        for tricky_ip in SkipList.skip_list:
             if ip_address in ipaddress.IPv4Network(tricky_ip):
                 print(tricky_ip)
                 return True

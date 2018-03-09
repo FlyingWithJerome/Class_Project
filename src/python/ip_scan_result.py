@@ -29,14 +29,12 @@ class Result(object):
 
     def __add__(self, another):
         assert isinstance(another, Result), "both of them should be Result object"
-
         self.result_list += another.result_list
 
         return self
 
     def __iadd__(self, another):
-        assert isinstance(another, Result), "both of them should be Result object:" + str(type(another))
-
+        assert isinstance(another, Result), "both of them should be Result object" 
         self.result_list += another.result_list
 
         return self
