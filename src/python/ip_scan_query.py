@@ -35,6 +35,8 @@ class Query(object):
             start_ip = ipaddress.IPv4Address(start_ip)
             end_ip   = ipaddress.IPv4Address(end_ip)
 
+        print("My end ip", str(end_ip))
+
         self.ip_range = range(int(start_ip), int(end_ip) + 1)
 
         self.set_dig_option(tcp=tcp, trace=trace)
@@ -122,26 +124,24 @@ class MultiprocessQuery(object):
         end_ip   = int(ipaddress.IPv4Address(end_ip))
 
         # split ip intervals for each workers
-
-        interval_length = (end_ip - start_ip) // process_num
-        breakpoints     = [start_ip]
+        step_length = (end_ip - start_ip) // process_num
+        remaining   = (end_ip - start_ip) % process_num
+        breakpoints = [start_ip,]
         
-        for point_index in range(process_num):
+        while len(breakpoints) < process_num + 1:
 
-            next_point = (start_ip + interval_length * (point_index + 1))
-
-            if next_point < (end_ip + 1):
-                breakpoints.append(next_point)
-                
+            if len(breakpoints) <= remaining:
+                next_point = start_ip + (len(breakpoints)* (step_length + 1))
             else:
-                breakpoints.append(end_ip + 1)
+                next_point = breakpoints[-1] + step_length
+            breakpoints.append(next_point)
 
         self.job_assignment = [
                                 {
                                 "start_ip" : int(breakpoints[i]), 
                                 "end_ip"   : int(breakpoints[i+1]), 
-                                "tcp"      :True, 
-                                "trace"    :True
+                                "tcp"      : True, 
+                                "trace"    : True
                                 } 
                                 for i in range(len(breakpoints)-1)]
 
