@@ -65,7 +65,7 @@ def send_mail_notice():
     server.ehlo()
     server.starttls()
     server.login(user, passwd)
-    server.sendmail("jeromemao95@gmail.com", "jxm959@case.edu", "\r\n".join(message))
+    server.sendmail(user, receiver, "\r\n".join(message))
     server.quit()
 
 def main_entry():
