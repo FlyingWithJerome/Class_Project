@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #!/bin/python3
 
 '''
@@ -7,12 +8,17 @@ This is used to query all IPv4 address for DNS resolution
 Quering is conducted in ip_scan_query.py
 Result formatting is conducted in ip_scan_result.py
 '''
-
+import atexit
+import smtplib
 import argparse
 import time
 
-from ip_scan_query import MultiprocessQuery
 
+from email.message import EmailMessage
+from email.header import Header
+from email.mime.text import MIMEText
+
+from ip_scan_query import MultiprocessQuery
 
 def parse_arguments():
     '''
@@ -35,12 +41,38 @@ def parse_arguments():
     parser.add_argument("Trace Switch", type=str, nargs="?", default="notrace", 
                         help="Whether to resolve from root")
 
+    parser.add_argument("Email Switch", type=str, nargs="?", default="email", 
+                        help="Whether to send email notice")
+
     return parser.parse_args()
+
+
+def send_mail_notice():
+
+    with open("mail_notice.txt") as configure:
+        try:
+            [user, passwd, receiver] = configure.readlines()
+        except:
+            return
+
+    message = [
+        "Subject: =?utf-8?b?U2VucGFpLCDjgbLjgajjgaTjgYrjga3jgYzjgYTjgZTjgajjgYzjgYLjgovjgpPjgafjgZk=?=",
+        "From: {}".format(user),
+        "Scanning Finished! Check your error message or csv output"
+    ]
+
+    server = smtplib.SMTP('smtp.gmail.com', 587)
+    server.ehlo()
+    server.starttls()
+    server.login(user, passwd)
+    server.sendmail("jeromemao95@gmail.com", "jxm959@case.edu", "\r\n".join(message))
+    server.quit()
 
 def main_entry():
     '''
     The entry of the scanner
     '''
+
     options = parse_arguments()
 
     start_ip = getattr(options, "Start IP Address")
@@ -48,7 +80,11 @@ def main_entry():
 
     tcp_switch   = getattr(options, "TCP Connection").startswith("tcp")
     trace_switch = getattr(options, "Trace Switch").startswith("trace")
+    email_switch = getattr(options, "Email Switch").startswith("email")
     process_num  = getattr(options, "Number of Processes")
+
+    if email_switch:
+        atexit.register(send_mail_notice)
 
     args = \
     {

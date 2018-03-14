@@ -1,0 +1,3 @@
+sender@gmail.com
+passwd
+receiver@case.edu
