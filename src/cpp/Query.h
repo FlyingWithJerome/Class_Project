@@ -18,6 +18,9 @@
 # include <boost/asio/ip/address_v4.hpp>
 # include <boost/algorithm/string.hpp>
 
+// Importing Mi's packet
+# include "Packet.h"
+
 // Macros
 
 

@@ -27,6 +27,17 @@ std::vector<int> Query::launchQuery()
     this->isOnDuty = true;
 }
 
+char* Query::makePacket()
+{
+    Packet p = Packet();
+
+    p.setQuestion("case.edu");
+
+    char* rawPacket = p.pack();
+
+    return rawPacket;
+}
+
 bool Query::isWorking()
 {
     return this->isOnDuty;
