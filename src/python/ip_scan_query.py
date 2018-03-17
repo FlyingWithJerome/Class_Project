@@ -138,8 +138,8 @@ class MultiprocessQuery(object):
             {
                 "start_ip" : int(breakpoints[i]), 
                 "end_ip"   : int(breakpoints[i+1]), 
-                "tcp"      : True, 
-                "trace"    : True
+                "tcp"      : tcp, 
+                "trace"    : trace
             } 
             for i in range(len(breakpoints)-1)]
 
