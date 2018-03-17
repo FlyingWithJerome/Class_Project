@@ -21,7 +21,7 @@ public:
 	char * pack(int & length);				// Get the packet to be sent
 
 private:
-	char	packetData[1000];
+	char*	packetData;
 	char	questionAddress[100];
 	int		questionCount;
 	char	serverIP[20];

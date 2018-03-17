@@ -2,7 +2,7 @@
 
 Packet::Packet()
 {
-	memset(packetData,0,sizeof(packetData));
+	// memset(packetData,0,sizeof(packetData));
 	memset(questionAddress,0,sizeof(questionAddress));
 	memset(serverIP,0,sizeof(serverIP));
 	QR		= 0;
@@ -15,6 +15,8 @@ Packet::Packet()
 	AD		= 0;
 	CD		= 0;
 	Rcode	= 0;
+
+	this->packetData = new char[1000];
 }
 
 Packet::Packet(char * inputString)
@@ -49,7 +51,7 @@ int Packet::setServer(char * input)
 char* Packet::pack(int & length)
 {
 	char * currentPos = packetData;
-	std::srand(std::time(nullptr));
+	std::srand(12345);
 	int randomVariable = std::rand();
 	int transactionID = randomVariable % 0xffff;// Randomly select transaction ID;
 

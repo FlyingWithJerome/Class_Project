@@ -48,7 +48,7 @@ class Query
         void             writeToFile(std::string fileName);
 
     // Public getters
-        bool             isWorking();
+        bool             isWorking() const;
     
     // Public setters
         void             setProcessNumbers();
