@@ -21,11 +21,11 @@ public:
 	char * pack();							// Get the packet to be sent
 
 private:
-	char[1000]	packetData;
-	char[100]	questionAddress;
-	int			questionCount;
-	char[20]	serverIP;
-	int			serverCount;
+	char	packetData[1000];
+	char	questionAddress[100];
+	int		questionCount;
+	char	serverIP[20];
+	int		serverCount;
 
 	bool	QR;		// 0 for query, 1 for response
 	int		OpCode;	// operation code, see RFC 1035
