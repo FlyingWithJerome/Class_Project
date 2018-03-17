@@ -3,16 +3,19 @@
 
 int main()
 {
-    int test_socket = socket(AF_INET, SOCK_DGRAM, 0);
+    // int test_socket = socket(AF_INET, SOCK_DGRAM, 0);
     
-    Packet p = Packet();
-    p.setQuestion("rcm.amazon.com");
+    // Packet p = Packet();
 
-    int packetLength = 0;
-    char* rawPacket = p.pack(packetLength);
+    // p.setQuestion("rcm.amazon.com");
 
-    sockaddr_in target = Query::addressObjectFactory("129.22.4.33", 53);
+    // int packetLength = 0;
 
-    sendto(test_socket, rawPacket, packetLength, NULL, (struct sockaddr *)&target, sizeof(target));
+    // char* rawPacket = p.pack(packetLength);
 
+    // sockaddr_in target = Query::addressObjectFactory("129.22.4.33", 53);
+
+    Query q = Query("8.8.8.8", "8.8.8.255");
+
+    q.launchQuery();
 }

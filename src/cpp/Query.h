@@ -23,9 +23,10 @@
 
 // Macros
 # define _NEWLINE_
+
 # define SEND(target) \
 _NEWLINE_ sendto(this->masterSocket, this->rawPacket, \
-_NEWLINE_ 1000, NULL, (struct* sockaddr)&target, sizeof(target))
+_NEWLINE_ 1000, 0, (struct sockaddr*)&target, sizeof(target))
 
 
 class Query
@@ -79,6 +80,4 @@ class Query
         bool isOnDuty;
 
         char* rawPacket;
-
-
 };

@@ -25,6 +25,10 @@ Query::~Query()
 std::vector<int> Query::launchQuery()
 {
     this->isOnDuty = true;
+
+    this->singleProcessSingleThreadQuery(this->IPAddressBegin, this->IPAddressEnd);
+
+    this->isOnDuty = false;
 }
 
 char* Query::makePacket()
@@ -34,6 +38,7 @@ char* Query::makePacket()
     p.setQuestion("case.edu");
 
     int length = 0;
+
     char* rawPacket = p.pack(length);
 
     return rawPacket;
@@ -74,7 +79,7 @@ sockaddr_in Query::addressObjectFactory(const char* ip_address, int port)
     return address_object;
 }
 
-unsigned int Query::addressToInt(std::string ipAddress)
+unsigned long int Query::addressToInt(std::string ipAddress)
 {
     std::vector<std::string> tokens;
 
@@ -93,16 +98,16 @@ void Query::singleProcessSingleThreadQuery (std::string startIPAddress, std::str
 
     sockaddr_in end   = Query::addressObjectFactory(endIPAddress.c_str(),   53);
 
-    unsigned long beginInt = boost::ip::address_v4::from_string(startIPAddress).to_ulong();
+    unsigned long beginInt = boost::asio::ip::address_v4::from_string(startIPAddress).to_ulong();
 
-    unsigned long endInt   = boost::ip::address_v4::from_string(endIPAddress).to_ulong();
+    unsigned long endInt   = boost::asio::ip::address_v4::from_string(endIPAddress).to_ulong();
 
-    for(unsigned long IPAddress = beginInt; IPAddress != endInt; beginInt++)
+    for(unsigned long IPAddress = beginInt; IPAddress <= endInt; IPAddress++)
     {
-        boost::ip::address_v4 currentIP = boost::ip::address_v4(IPAddress);
+        boost::asio::ip::address_v4 currentIP = boost::asio::ip::address_v4(IPAddress);
 
         sockaddr_in addressObject = Query::addressObjectFactory(currentIP.to_string().c_str(), 53);
 
-        sendto(this->masterSocket, this->rawPacket, 1000, NULL, (struct* sockaddr)&addressObject, sizeof(addressObject));
+        SEND(addressObject);
     }
 }
