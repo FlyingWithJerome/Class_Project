@@ -2,11 +2,11 @@
 # include "Query.h"
 
 Query::Query()
-:isOnDuty(false), IPAddressBegin(0), IPAddressEnd((int)pow(2, 32))
+:isOnDuty(false), IPAddressBegin("0.0.0.0"), IPAddressEnd("255.255.255.255")
 {
     this->masterSocket = socket(AF_INET, SOCK_DGRAM, 0);
 
-    this->rawPacket    = Query::makePacket();
+    // this->rawPacket    = Query::makePacket();
 }
 
 Query::Query(std::string startIPAddress, std::string endIPAddress)
@@ -14,12 +14,12 @@ Query::Query(std::string startIPAddress, std::string endIPAddress)
 {
     this->masterSocket = socket(AF_INET, SOCK_DGRAM, 0);
 
-    this->rawPacket    = Query::makePacket();
+    // this->rawPacket    = Query::makePacket();
 }
 
 Query::~Query()
 {
-    this->masterSocket.close()
+    close(this->masterSocket);
 }
 
 std::vector<int> Query::launchQuery()
@@ -29,7 +29,7 @@ std::vector<int> Query::launchQuery()
 
 bool Query::isWorking()
 {
-    return this->isOnDuty
+    return this->isOnDuty;
 }
 
 std::vector<int> Query::splitJobAssignments(int start, int end, int numberOfWorkers)

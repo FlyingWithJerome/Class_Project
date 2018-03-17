@@ -27,7 +27,7 @@ class Query
     // Constructors
         Query();
 
-        Query(int startIPAddress, int endIPAddress);
+        Query(std::string startIPAddress, std::string endIPAddress);
 
     // Destructors
         ~Query();
@@ -55,9 +55,9 @@ class Query
 
     private:
 
-        void singleProcessMultithreadQuery (int startIPAddress, int endIPAddress);
+        void singleProcessMultithreadQuery (std::string startIPAddress, std::string endIPAddress);
 
-        void singleProcessSingleThreadQuery(int startIPAddress, int endIPAddress);
+        void singleProcessSingleThreadQuery (std::string startIPAddress, std::string endIPAddress);
 
         std::vector<int> splitJobAssignments(int start, int end, int numberOfWorkers);
 
@@ -65,9 +65,9 @@ class Query
 
         int threadNumber;
 
-        int IPAddressBegin;
+        std::string IPAddressBegin;
 
-        int IPAddressEnd;
+        std::string IPAddressEnd;
 
         bool isOnDuty;
 

@@ -5,7 +5,7 @@ Packet::Packet()
 	memset(packetData,0,sizeof(packetData));
 	memset(questionAddress,0,sizeof(questionAddress));
 	memset(serverIP,0,sizeof(serverIP));
-	Query	= 0;
+	QR		= 0;
 	OpCode	= 0;// Standard Query
 	AA		= 0;
 	TC		= 0;
@@ -29,7 +29,7 @@ int Packet::setQuestion(char * input)
 	int len = 0;
 	if(len = strlen(input))
 	{
-		memcpy(questionAddress,input,len)
+		memcpy(questionAddress,input,len);
 		questionCount ++;
 	}
 	return len;
@@ -40,7 +40,7 @@ int Packet::setServer(char * input)
 	int len = 0;
 	if(len = strlen(input))
 	{
-		memcpy(serverIP,input,len)
+		memcpy(serverIP,input,len);
 		serverCount ++;
 	}
 	return len;
@@ -80,7 +80,7 @@ char* Packet::pack()
 	//Write in Name to query
 	*(currentPos) = '.';
 	int addressLength = strlen(questionAddress);
-	memcpy(currentPos+1,questionAddress,addressLength)
+	memcpy(currentPos+1,questionAddress,addressLength);
 
 	int count = 0;
 	int lastPos = 0;
