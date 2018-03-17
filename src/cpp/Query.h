@@ -22,6 +22,10 @@
 # include "Packet.h"
 
 // Macros
+# define _NEWLINE_
+# define SEND(target) \
+_NEWLINE_ sendto(this->masterSocket, this->rawPacket, \
+_NEWLINE_ 1000, NULL, (struct* sockaddr)&target, sizeof(target))
 
 
 class Query
@@ -49,11 +53,11 @@ class Query
         void             setProcessNumbers();
 
     // Static methods
-        static char*        makePacket();
+        static char*             makePacket();
 
-        static sockaddr_in  addressObjectFactory(const char* ip_address, int port);
+        static sockaddr_in       addressObjectFactory(const char* ip_address, int port);
 
-        static unsigned int addressToInt(std::string ipAddress);
+        static unsigned long int addressToInt(std::string ipAddress);
 
 
     private:

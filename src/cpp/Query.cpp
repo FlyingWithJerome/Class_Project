@@ -6,7 +6,7 @@ Query::Query()
 {
     this->masterSocket = socket(AF_INET, SOCK_DGRAM, 0);
 
-    // this->rawPacket    = Query::makePacket();
+    this->rawPacket    = Query::makePacket();
 }
 
 Query::Query(std::string startIPAddress, std::string endIPAddress)
@@ -14,7 +14,7 @@ Query::Query(std::string startIPAddress, std::string endIPAddress)
 {
     this->masterSocket = socket(AF_INET, SOCK_DGRAM, 0);
 
-    // this->rawPacket    = Query::makePacket();
+    this->rawPacket    = Query::makePacket();
 }
 
 Query::~Query()
@@ -93,5 +93,16 @@ void Query::singleProcessSingleThreadQuery (std::string startIPAddress, std::str
 
     sockaddr_in end   = Query::addressObjectFactory(endIPAddress.c_str(),   53);
 
+    unsigned long beginInt = boost::ip::address_v4::from_string(startIPAddress).to_ulong();
 
+    unsigned long endInt   = boost::ip::address_v4::from_string(endIPAddress).to_ulong();
+
+    for(unsigned long IPAddress = beginInt; IPAddress != endInt; beginInt++)
+    {
+        boost::ip::address_v4 currentIP = boost::ip::address_v4(IPAddress);
+
+        sockaddr_in addressObject = Query::addressObjectFactory(currentIP.to_string().c_str(), 53);
+
+        sendto(this->masterSocket, this->rawPacket, 1000, NULL, (struct* sockaddr)&addressObject, sizeof(addressObject));
+    }
 }
