@@ -33,7 +33,8 @@ char* Query::makePacket()
 
     p.setQuestion("case.edu");
 
-    char* rawPacket = p.pack();
+    int length = 0;
+    char* rawPacket = p.pack(length);
 
     return rawPacket;
 }

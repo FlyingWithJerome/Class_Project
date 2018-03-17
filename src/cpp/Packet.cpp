@@ -26,8 +26,8 @@ Packet::Packet(char * inputString)
 
 int Packet::setQuestion(char * input)
 {
-	int len = 0;
-	if(len = strlen(input))
+	int len = strlen(input);
+	if(len)
 	{
 		memcpy(questionAddress,input,len);
 		questionCount ++;
@@ -37,8 +37,8 @@ int Packet::setQuestion(char * input)
 
 int Packet::setServer(char * input)
 {
-	int len = 0;
-	if(len = strlen(input))
+	int len = strlen(input);
+	if(len)
 	{
 		memcpy(serverIP,input,len);
 		serverCount ++;
@@ -46,7 +46,7 @@ int Packet::setServer(char * input)
 	return len;
 }
 
-char* Packet::pack()
+char* Packet::pack(int & length)
 {
 	char * currentPos = packetData;
 	std::srand(std::time(nullptr));
@@ -82,11 +82,13 @@ char* Packet::pack()
 	int addressLength = strlen(questionAddress);
 	memcpy(currentPos+1,questionAddress,addressLength);
 
+	//fprintf(stdout,"%s",questionAddress);
+	
 	int count = 0;
 	int lastPos = 0;
-	for(int i = 0;i<=addressLength;i++)
+	for(int i = 0;i<=addressLength+1;i++)
 	{
-		if(currentPos[i]=='.'||currentPos==0)
+		if(currentPos[i]=='.'||currentPos[i]==0)
 			if(count)
 			{
 				currentPos[lastPos] = count;
@@ -98,8 +100,8 @@ char* Packet::pack()
 		else
 			count ++;
 	}
-
-	currentPos += addressLength;
+	//fprintf(stdout,"%s",currentPos);
+	currentPos += addressLength+2;
 
 	//Write in Type A
 	*(currentPos++) = 0;
@@ -109,5 +111,6 @@ char* Packet::pack()
 	*(currentPos++) = 0;
 	*(currentPos++) = 1;
 
+	length = currentPos - packetData;
 	return packetData;
 }

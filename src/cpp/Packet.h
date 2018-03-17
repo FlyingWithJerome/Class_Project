@@ -18,7 +18,7 @@ public:
 	int setQuestion(char *);				// Set the question web address
 	int setServer(char *);					// Set the server to ask for DNS response
 	std::vector<std::string> getAnswerIP();	// Get the answer section of IP
-	char * pack();							// Get the packet to be sent
+	char * pack(int & length);				// Get the packet to be sent
 
 private:
 	char	packetData[1000];

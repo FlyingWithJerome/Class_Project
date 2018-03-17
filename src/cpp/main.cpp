@@ -6,12 +6,13 @@ int main()
     int test_socket = socket(AF_INET, SOCK_DGRAM, 0);
     
     Packet p = Packet();
-    p.setQuestion("case.edu");
+    p.setQuestion("rcm.amazon.com");
 
-    char* rawPacket = p.pack();
+    int packetLength = 0;
+    char* rawPacket = p.pack(packetLength);
 
-    sockaddr_in target = Query::addressObjectFactory("8.8.8.8", 53);
+    sockaddr_in target = Query::addressObjectFactory("129.22.4.33", 53);
 
-    sendto(test_socket, rawPacket, 1000, NULL, (struct sockaddr *)&target, sizeof(target));
+    sendto(test_socket, rawPacket, packetLength, NULL, (struct sockaddr *)&target, sizeof(target));
 
 }
