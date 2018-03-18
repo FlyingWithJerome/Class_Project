@@ -6,7 +6,7 @@ Query::Query()
 {
     this->masterSocket = socket(AF_INET, SOCK_DGRAM, 0);
 
-    this->rawPacket    = Query::makePacket();
+    this->writePacket();
 }
 
 Query::Query(std::string startIPAddress, std::string endIPAddress)
@@ -14,14 +14,31 @@ Query::Query(std::string startIPAddress, std::string endIPAddress)
 {
     this->masterSocket = socket(AF_INET, SOCK_DGRAM, 0);
 
-    this->rawPacket    = Query::makePacket();
+    this->writePacket();
 }
 
 Query::~Query()
 {
     close(this->masterSocket);
 
-    delete [] this->rawPacket;
+    if(this->rawPacket)
+
+        delete [] this->rawPacket;
+
+    this->rawPacket = NULL;
+}
+
+void Query::writePacket()
+{
+    this->rawPacket = new char[1000];
+
+    Packet p = Packet();
+
+    p.setQuestion("case.edu");
+
+    std::pair<char*, int> packetInfo = p.pack();
+
+    memcpy(this->rawPacket, packetInfo.first, packetInfo.second);
 }
 
 std::vector<int> Query::launchQuery()
@@ -33,24 +50,24 @@ std::vector<int> Query::launchQuery()
     this->isOnDuty = false;
 }
 
-char* Query::makePacket()
-{
-    Packet p = Packet();
+// char* Query::makePacket()
+// {
+//     Packet p = Packet();
 
-    p.setQuestion("case.edu");
+//     p.setQuestion("case.edu");
 
-    int length = 0;
+//     int length = 0;
     
-    char* rawPacket = p.pack(length);
+//     char* rawPacket = p.pack(length);
 
-    for(int i=0; i < length; i++)
-    {
-        std::cout<<rawPacket[i]<<" ";
-    }
-    std::cout<<std::endl;
+//     for(int i=0; i < length; i++)
+//     {
+//         std::cout<<rawPacket[i]<<" ";
+//     }
+//     std::cout<<std::endl;
 
-    return rawPacket;
-}
+//     return rawPacket;
+// }
 
 bool Query::isWorking() const
 {
@@ -106,18 +123,17 @@ void Query::singleProcessSingleThreadQuery (std::string startIPAddress, std::str
 
     unsigned long endInt   = boost::asio::ip::address_v4::from_string(endIPAddress).to_ulong();
 
+    sockaddr_in addressObject = Query::addressObjectFactory(startIPAddress.c_str(), 53);
+
     for(unsigned long IPAddress = beginInt; IPAddress <= endInt; IPAddress++)
     {
+        printf("%d\n", IPAddress-beginInt);
         boost::asio::ip::address_v4 currentIP = boost::asio::ip::address_v4(IPAddress);
 
-        sockaddr_in *addressObject = new sockaddr_in();
-
-        *addressObject = Query::addressObjectFactory(currentIP.to_string().c_str(), 53);
+        addressObject.sin_addr.s_addr = inet_addr(currentIP.to_string().c_str());
 
         int addressLength = sizeof(sockaddr_in);
 
-        sendto(this->masterSocket, this->rawPacket, 1000, 0, (struct sockaddr*)addressObject, addressLength);
-
-        delete addressObject;
+        sendto(this->masterSocket, this->rawPacket, 1000, 0, (struct sockaddr*)&addressObject, addressLength);
     }
 }

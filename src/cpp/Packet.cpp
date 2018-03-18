@@ -26,6 +26,15 @@ Packet::Packet(char * inputString)
 	memset(serverIP,0,sizeof(serverIP));
 }
 
+Packet::~Packet()
+{
+	if(this->packetData)
+
+		delete [] this->packetData;
+
+	printf("deleted by p\n");
+}
+
 int Packet::setQuestion(char * input)
 {
 	int len = strlen(input);
@@ -48,7 +57,7 @@ int Packet::setServer(char * input)
 	return len;
 }
 
-char* Packet::pack(int & length)
+std::pair<char*, int> Packet::pack()
 {
 	char * currentPos = packetData;
 	std::srand(12345);
@@ -113,6 +122,6 @@ char* Packet::pack(int & length)
 	*(currentPos++) = 0;
 	*(currentPos++) = 1;
 
-	length = currentPos - packetData;
-	return packetData;
+	std::pair<char*, int> returnValue = std::make_pair(packetData, currentPos - packetData);
+	return returnValue;
 }

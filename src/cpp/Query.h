@@ -13,6 +13,8 @@
 # include <vector>
 # include <cmath>
 # include <string>
+# include <utility>
+# include <cstdio>
 
 // Importing boost library
 # include <boost/asio/ip/address_v4.hpp>
@@ -54,8 +56,7 @@ class Query
         void             setProcessNumbers();
 
     // Static methods
-        static char*             makePacket();
-
+        void                     writePacket();
         static sockaddr_in       addressObjectFactory(const char* ip_address, int port);
 
         static unsigned long int addressToInt(std::string ipAddress);
@@ -72,6 +73,8 @@ class Query
         int masterSocket;
 
         int threadNumber;
+
+        int packetLength;
 
         std::string IPAddressBegin;
 

@@ -3,7 +3,7 @@
 
 all: main
 
-GLOBAL = -std=c++0x -lboost_system -o
+GLOBAL = -std=c++0x -lboost_system -g -o
 
 CPP_LIST = main.cpp Query.cpp Packet.cpp
 

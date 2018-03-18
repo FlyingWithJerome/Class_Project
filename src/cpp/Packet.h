@@ -5,6 +5,8 @@
 #include <vector>
 #include <ctime>
 
+#include <utility>
+
 #ifndef _DNS_SCAN_PACKET
 #define _DNS_SCAN_PACKET
 #define DEFAULT_QUERY_ADDRESS "email-jxm959-case-edu.ipl.eecs.case.edu"
@@ -18,7 +20,8 @@ public:
 	int setQuestion(char *);				// Set the question web address
 	int setServer(char *);					// Set the server to ask for DNS response
 	std::vector<std::string> getAnswerIP();	// Get the answer section of IP
-	char * pack(int & length);				// Get the packet to be sent
+	std::pair<char*, int>  pack();				// Get the packet to be sent
+	~Packet();
 
 private:
 	char*	packetData;
