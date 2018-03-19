@@ -12,11 +12,13 @@ actions, include:
 
 import concurrent.futures
 import ipaddress
+import socket
 import subprocess
 import time
 
 import numpy as np
 
+import self_dns
 from ip_scan_result import Result
 
 class Query(object):
@@ -37,16 +39,30 @@ class Query(object):
 
         self.ip_range = range(int(start_ip), int(end_ip))
 
-        self.set_dig_option(tcp=tcp, trace=trace)
+        self.__prepare_socket_factory()
+        self.__set_dig_option(tcp=tcp, trace=trace)
 
         self.hostname    = "email-jxm959-case-edu.ipl.eecs.case.edu"
         self.ip_address  = "198.168.2.16"
-        self.dig_command = "dig {}".format(self.hostname)
+        self.__packet    = self_dns.make_dns_packet()
 
         self.output_object = Result()
 
 
-    def set_dig_option(self, tcp=False, trace=False) -> None:
+    def __prepare_socket_factory(self) -> None:
+        '''
+        factory function for building a pair of UDP socket,
+        input socket is non-blocking
+        '''
+        self.__output_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+        self.__input_socket  = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+
+        self.__input_socket.setblocking(0)
+
+        # self.__input_socket.bind(('', 2048))
+
+
+    def __set_dig_option(self, tcp=False, trace=False) -> None:
         '''
         set the dig command options
         '''
@@ -54,29 +70,14 @@ class Query(object):
         self.trace_option = "trace" if trace else "notrace"
 
     
-    def run_dig(self, ip_address:ipaddress.IPv4Address) -> None:
+    def __launch_query(self, ip_address:ipaddress.IPv4Address) -> None:
         '''
-        the place where dig is executed
+        send one packet to the ip_address
         '''
-        command_line = self.dig_command + " @{} +{} +{} +time=2"
-        command_line = command_line.format(str(ip_address),
-                                            self.tcp_option,
-                                            self.trace_option)
-        
-        try:
-            raw_output = subprocess.check_output(command_line.split())
-            status     = self.check_stdoutput(str(raw_output))
-
-        except subprocess.CalledProcessError as error:
-            status = "Execution FAILED, Return Code %d"%(error.returncode)
-
-        self.output_object.append_result([ip_address, 
-                                   self.tcp_option,
-                                   self.trace_option,
-                                   status])
+        self.__output_socket.sendto(self.__packet, (str(ip_address), 53))
 
         
-    def run_dig_iteratively(self):
+    def launch_query(self) -> Result:
         '''
         Nothing exciting, just a loop
         '''
@@ -85,7 +86,7 @@ class Query(object):
         try:
             for ip in self.ip_range:
                 if skip_list.is_valid(ipaddress.IPv4Address(ip)):
-                    self.run_dig(ipaddress.IPv4Address(ip))
+                    self.__launch_query(ipaddress.IPv4Address(ip))
 
         except KeyboardInterrupt:
             pass
@@ -93,23 +94,23 @@ class Query(object):
         return self.output_object
 
 
-    def check_stdoutput(self, output_string:str) -> str:
-        '''
-        check if the output is what we want
-        '''
-        if output_string:
+    # def check_stdoutput(self, output_string:str) -> str:
+    #     '''
+    #     check if the output is what we want
+    #     '''
+    #     if output_string:
 
-            if ";; ANSWER SECTION:" not in output_string and self.trace_option != "trace":
-                return "Execution OK, Not Returning Answer"
+    #         if ";; ANSWER SECTION:" not in output_string and self.trace_option != "trace":
+    #             return "Execution OK, Not Returning Answer"
 
-            if "IN A" in output_string and self.ip_address not in output_string:
-                return "Execution OK, Returning Wrong Answer"
+    #         if "IN A" in output_string and self.ip_address not in output_string:
+    #             return "Execution OK, Returning Wrong Answer"
 
-            if self.ip_address in output_string:
-                return "Execution OK, Answer OK"
+    #         if self.ip_address in output_string:
+    #             return "Execution OK, Answer OK"
 
-        else:
-            return "Unknown Error"
+    #     else:
+    #         return "Unknown Error"
 
 
 class MultiprocessQuery(object):
@@ -122,17 +123,7 @@ class MultiprocessQuery(object):
         end_ip   = int(ipaddress.IPv4Address(end_ip))
 
         # split ip intervals for each workers
-        step_length = (end_ip - start_ip + 1) // process_num
-        remaining   = (end_ip - start_ip + 1) % process_num
-        breakpoints = [start_ip,]
-        
-        while len(breakpoints) < process_num + 1:
-
-            if len(breakpoints) <= remaining:
-                next_point = breakpoints[-1] + step_length + 1
-            else:
-                next_point = breakpoints[-1] + step_length
-            breakpoints.append(next_point)
+        breakpoints = self.__assign_jobs(start_ip, end_ip, process_num)
 
         self.job_assignment = [
             {
@@ -153,7 +144,26 @@ class MultiprocessQuery(object):
         by the process pool (to be pickled, possibly)
         '''
         query_obj = Query(**kwargs)
-        return query_obj.run_dig_iteratively()
+        return query_obj.launch_query()
+
+
+    def __assign_jobs(self, start_ip:int, end_ip:int, workers:int) -> [int]:
+        '''
+        try to assign jobs to processes
+        '''
+        step_length = (end_ip - start_ip + 1) // workers
+        remaining   = (end_ip - start_ip + 1) % workers
+        breakpoints = [start_ip,]
+        
+        while len(breakpoints) < workers + 1:
+
+            if len(breakpoints) <= remaining:
+                next_point = breakpoints[-1] + step_length + 1
+            else:
+                next_point = breakpoints[-1] + step_length
+            breakpoints.append(next_point)
+
+        return breakpoints
 
 
     def run(self):
@@ -176,22 +186,22 @@ class SkipList(object):
 
     skip_list = \
         [
-            "0.0.0.0/8",
-            "10.0.0.0/8",
-            "100.64.0.0/10",
-            "127.0.0.0/8",
-            "169.254.0.0/16",
-            "172.16.0.0/12",
-            "192.0.0.0/24",
-            "192.0.2.0/24",
-            "192.88.99.0/24",
-            "192.168.0.0/16",
-            "198.18.0.0/15",
-            "198.51.100.0/24",
-            "203.0.113.0/24",
-            "224.0.0.0/4",
-            "240.0.0.0/4",
-            "255.255.255.255"
+            ipaddress.IPv4Network("0.0.0.0/8"),
+            ipaddress.IPv4Network("10.0.0.0/8"),
+            ipaddress.IPv4Network("100.64.0.0/10"),
+            ipaddress.IPv4Network("127.0.0.0/8"),
+            ipaddress.IPv4Network("169.254.0.0/16"),
+            ipaddress.IPv4Network("172.16.0.0/12"),
+            ipaddress.IPv4Network("192.0.0.0/24"),
+            ipaddress.IPv4Network("192.0.2.0/24"),
+            ipaddress.IPv4Network("192.88.99.0/24"),
+            ipaddress.IPv4Network("192.168.0.0/16"),
+            ipaddress.IPv4Network("198.18.0.0/15"),
+            ipaddress.IPv4Network("198.51.100.0/24"),
+            ipaddress.IPv4Network("203.0.113.0/24"),
+            ipaddress.IPv4Network("224.0.0.0/4"),
+            ipaddress.IPv4Network("240.0.0.0/4"),
+            ipaddress.IPv4Network("255.255.255.255")
         ] 
 
     def remove_address(self, ip_address:ipaddress.IPv4Address):

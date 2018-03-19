@@ -27,7 +27,7 @@ def make_dns_packet():
     class_         = 0x0001 # 2 byte short (IN)
     query_website  = bytes("\4case\3edu\0", "ASCII")
 
-    format_= "!HH4H%ds2H%ds"%(len(query_website), len(message))
+    # format_= "!HH4H%ds2H%ds"%(len(query_website), len(message))
 
     header = struct.pack("!6H", transaction_id, control, q_counts, ans_counts, auth_counts, add_counts)
 
@@ -151,7 +151,7 @@ def read_dns_response(packet):
     # Read Answers
     Answers = [[]for i in range(count_of_answer_RR)];
     for i in range(0,count_of_answer_RR):
-        
+        pass
     return packet_info;
 
 

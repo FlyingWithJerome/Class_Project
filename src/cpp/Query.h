@@ -15,6 +15,7 @@
 # include <string>
 # include <utility>
 # include <cstdio>
+# include <cerrno>
 
 // Importing boost library
 # include <boost/asio/ip/address_v4.hpp>
@@ -57,10 +58,10 @@ class Query
 
     // Static methods
         void                     writePacket();
+
         static sockaddr_in       addressObjectFactory(const char* ip_address, int port);
 
         static unsigned long int addressToInt(std::string ipAddress);
-
 
     private:
 
@@ -81,6 +82,8 @@ class Query
         std::string IPAddressEnd;
 
         bool isOnDuty;
+
+        Packet* packetManager;
 
         char* rawPacket;
 };
