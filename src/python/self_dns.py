@@ -71,20 +71,39 @@ def rcode_reader(rcode):
             8:'NXRRSet',9:'NotAuth',10:'NotZone'};
     return types.get(rcode,'UNKNOWN');
 
+def read_pointer_from_offset(packet,offset):
+    digit = struct.unpack_from("!B",packet,offset)[0];
+    offset += 1;
+    web_name = "";
+    while(digit):
+        web_name += struct.unpack_from("!c",packet,offset)[0].decode('ascii');
+        offset += 1;
+        digit -= 1;
+        if(digit==0):
+            digit = struct.unpack_from("!B",packet,offset)[0];
+            offset += 1;
+            if(digit!=0):
+                web_name += '.'
+    return web_name;
+
 def read_dns_response(packet):
     packet_info = {}
     offset = 0
 
     # Read transaction ID
     temp = struct.unpack_from("!2B",packet,offset);
-    packet_info['TransactionID'] = temp[0]<<8+temp[1]
+    packet_info['TransactionID'] = hex(temp[0]<<8|temp[1])
     offset += 2;
 
     # Read the flags 
     temp = struct.unpack_from("!2B",packet,offset);
-    flag = temp[0]<<8+temp[1]
+    flag = temp[0]<<8|temp[1]
     offset += 2;
-    packet_info['QR'] = bool(flag>>15)
+    QR = bool(flag>>15)
+    if(QR):
+        packet_info['QR'] = 'Response';
+    else:
+        packet_info['QR'] = 'Query';
     packet_info['OpCode'] = opcode_reader((flag>>11) & 0x0f)
     packet_info['AA'] = bool(flag>>10 & 0x01)
     packet_info['TC'] = bool(flag>>9  & 0x01)
@@ -97,52 +116,52 @@ def read_dns_response(packet):
 
     # Read the number of Questions
     temp = struct.unpack_from("!2B",packet,offset);
-    count_of_questions = temp[0]<<8+temp[1]
+    count_of_questions = temp[0]<<8|temp[1]
     offset += 2;
     packet_info['Questions'] = count_of_questions;
 
     # Read the number of Answer RRs
     temp = struct.unpack_from("!2B",packet,offset);
-    count_of_answer_RR = temp[0]<<8+temp[1]
+    count_of_answer_RR = temp[0]<<8|temp[1]
     offset += 2;
     packet_info['AnswerRR'] = count_of_answer_RR;
 
     # Read the number of Authority RRs
     temp = struct.unpack_from("!2B",packet,offset);
-    count_of_authority_RR = temp[0]<<8+temp[1]
+    count_of_authority_RR = temp[0]<<8|temp[1]
     offset += 2;
     packet_info['AuthorityRR'] = count_of_authority_RR;
 
     # Read the number of Additional RRs
     temp = struct.unpack_from("!2B",packet,offset);
-    count_of_additional_RR = temp[0]<<8+temp[1]
+    count_of_additional_RR = temp[0]<<8|temp[1]
     offset += 2;
     packet_info['AdditionalRR'] = count_of_additional_RR;
 
     # Read Queries
     Queries = [[]for i in range(count_of_questions)]
     for i in range(0,count_of_questions):
-        digit = struct.unpack_from("!B",packet,offset);
+        digit = struct.unpack_from("!B",packet,offset)[0];
         offset += 1;
         web_name = "";
         while(digit):
-            web_name += struct.unpack_from("!c",packet,offset);
+            web_name += struct.unpack_from("!c",packet,offset)[0].decode('ascii');
             offset += 1;
             digit -= 1;
             if(digit==0):
-                digit = struct.unpack_from("!B",packet,offset);
+                digit = struct.unpack_from("!B",packet,offset)[0];
                 offset += 1;
                 if(digit!=0):
                     web_name += '.'
 
         temp = struct.unpack_from("!2B",packet,offset);
         offset += 2;
-        Type = temp[0]<<8+temp[1];
+        Type = temp[0]<<8|temp[1];
         Type = type_reader(Type);
         temp = struct.unpack_from("!2B",packet,offset);
         offset += 2;
-        Class = temp[0]<<8+temp[1];
-        Class = type_reader(Class);
+        Class = temp[0]<<8|temp[1];
+        Class = class_reader(Class);
         Queries[i].append(web_name);
         Queries[i].append(Type);
         Queries[i].append(Class);
@@ -150,13 +169,71 @@ def read_dns_response(packet):
 
     # Read Answers
     Answers = [[]for i in range(count_of_answer_RR)];
-#<<<<<<< HEAD
-    #for i in range(0,count_of_answer_RR):
-        
-#=======
-#    for i in range(0,count_of_answer_RR):
-#        pass
-#>>>>>>> f62ace1774b200ee68f897e444e36d78d4b4ac38
+    for i in range(0,count_of_answer_RR):
+        #digit = struct.unpack_from("!B",packet,offset)[0];
+        digit = int.from_bytes(struct.unpack_from("!c",packet,offset)[0],byteorder='little',signed=False);
+        current_byte = digit;
+        web_name = "";
+        offset += 1;
+        while(digit): # Could be \0xc0
+            if(current_byte>>4 == 12):# Identifies a pointer
+                temp = struct.unpack_from("!2B",packet,offset-1);
+                temp_offset = (temp[0]&0x0f)<<8|temp[1];
+                web_name += read_pointer_from_offset(packet,temp_offset);
+                offset += 1;
+                break;# Break when finished dealing with pointer
+            else:# Not a pointer
+                web_name += struct.unpack_from("!c",packet,offset)[0].decode('ascii');
+
+            offset += 1;
+            digit -= 1; #
+            if(digit==0):
+                digit = struct.unpack_from("!B",packet,offset)[0];
+                offset += 1;
+                if(digit!=0):
+                    web_name += '.'
+
+            current_byte = int.from_bytes(struct.unpack_from("!c",packet,offset)[0],byteorder='little',signed=False);
+        IsAType = False;
+        IsAAAAType = False;
+        temp = struct.unpack_from("!2B",packet,offset);
+        offset += 2;
+        Type = temp[0]<<8|temp[1];
+        Type = type_reader(Type);
+        if(Type=='A'):
+            IsAType = True;
+        temp = struct.unpack_from("!2B",packet,offset);
+        offset += 2;
+        Class = temp[0]<<8|temp[1];
+        Class = class_reader(Class);
+        temp = struct.unpack_from("!4B",packet,offset);
+        offset += 4;
+        TTL = (temp[0]<<24|temp[1]<<16|temp[2]<<8|temp[3]);
+        temp = struct.unpack_from("!2B",packet,offset);
+        offset += 2;
+        DataLength = temp[0]<<8|temp[1];
+        Address = "";
+        if(IsAType):#IPv4
+            for j in range(0,DataLength):
+                temp = struct.unpack_from("!B",packet,offset)[0];
+                offset += 1;
+                Address += str(temp);
+                if(j!=(DataLength-1)):
+                    Address += '.';
+        elif(IsAAAAType):#IPv6
+            for j in range(0,DataLength):
+                temp = struct.unpack_from("!2B",packet,offset);
+                offset += 2;
+                Address += hex(temp[0]);
+                Address += hex(temp[1]);
+                if(j!=(DataLength-1)):
+                    Address += ':';
+        Answers[i].append(web_name);
+        Answers[i].append(Type);
+        Answers[i].append(Class);
+        Answers[i].append(TTL);
+        Answers[i].append(Address);
+    packet_info['Answers']=Answers;
     return packet_info;
 
 
