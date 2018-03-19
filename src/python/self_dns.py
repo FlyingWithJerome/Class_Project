@@ -40,7 +40,6 @@ def class_reader(Class):
 			254:'None',255:'Any'};
 	return types.get(Class,'UNKNOWN');
 
-
 def type_reader(Type):
 	types=	{1:'A',2:'NS',3:'MD',4:'MF',
 			5:'CNAME',6:'SOA',7:'MB',8:'MG',
@@ -62,6 +61,16 @@ def type_reader(Type):
 			256:'URI',257:'CAA',32768:'DNSSEC Trust Authorities',32769:'DNSSEC Lookaside Validation'};
 	return types.get(Type,'UNKNOWN');
 
+def opcode_reader(opcode):
+	types=	{0:'QUERY',1:'IQUERY',2:'STATUS',4:'Notify',5:'Update'};
+	return types.get(opcode,'UNKNOWN');
+
+def rcode_reader(rcode):
+	types=	{0:'No error',1:'Format error',2:'Server failure',3:'Name Error',
+			4:'Not Implemented',5:'Refused',6:'YXDomain',7:'YXRRSet',
+			8:'NXRRSet',9:'NotAuth',10:'NotZone'};
+	return types.get(rcode,'UNKNOWN');
+
 def read_dns_response(packet):
 	packet_info = {}
 	offset = 0
@@ -76,7 +85,7 @@ def read_dns_response(packet):
 	flag = temp[0]<<8+temp[1]
 	offset += 2;
 	packet_info['QR'] = bool(flag>>15)
-	packet_info['OpCode'] = (flag>>11) & 0x0f
+	packet_info['OpCode'] = opcode_reader((flag>>11) & 0x0f)
 	packet_info['AA'] = bool(flag>>10 & 0x01)
 	packet_info['TC'] = bool(flag>>9  & 0x01)
 	packet_info['RD'] = bool(flag>>8  & 0x01)
@@ -84,7 +93,7 @@ def read_dns_response(packet):
 	packet_info['Z']  = bool(flag>>6  & 0x01)
 	packet_info['AD'] = bool(flag>>5  & 0x01)
 	packet_info['CD'] = bool(flag>>4  & 0x01)
-	packet_info['RCode']  = (flag>>0) & 0x0f
+	packet_info['RCode']  = rcode_reader((flag>>0) & 0x0f)
 
 	# Read the number of Questions
 	temp = struct.unpack_from("2B",packet,offset);
@@ -139,6 +148,11 @@ def read_dns_response(packet):
 		Queries[i].append(Class);
 	packet_info['Queries'] = Queries;
 
+	# Read Answers
+	Answers = [[]for i in range(count_of_answer_RR)];
+	for i in range(0,count_of_answer_RR):
+		
+	return packet_info;
 
 
 
