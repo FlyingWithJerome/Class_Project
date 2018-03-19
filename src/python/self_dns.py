@@ -14,8 +14,8 @@ def make_dns_packet():
     make a customize udp packet (for dns query, carries a message to
     system admins)
     '''
-    #message = "Tell me, senpai!\0"
-    #message = bytes(message, "ASCII")
+    message = "Tell me, senpai!\0"
+    message = bytes(message, "ASCII")
 
     transaction_id = 0xffff # 2 byte short
     control        = 0x0100
@@ -76,12 +76,12 @@ def read_dns_response(packet):
     offset = 0
 
     # Read transaction ID
-    temp = struct.unpack_from("2B",packet,offset);
+    temp = struct.unpack_from("!2B",packet,offset);
     packet_info['TransactionID'] = temp[0]<<8+temp[1]
     offset += 2;
 
     # Read the flags 
-    temp = struct.unpack_from("2B",packet,offset);
+    temp = struct.unpack_from("!2B",packet,offset);
     flag = temp[0]<<8+temp[1]
     offset += 2;
     packet_info['QR'] = bool(flag>>15)
@@ -96,25 +96,25 @@ def read_dns_response(packet):
     packet_info['RCode']  = rcode_reader((flag>>0) & 0x0f)
 
     # Read the number of Questions
-    temp = struct.unpack_from("2B",packet,offset);
+    temp = struct.unpack_from("!2B",packet,offset);
     count_of_questions = temp[0]<<8+temp[1]
     offset += 2;
     packet_info['Questions'] = count_of_questions;
 
     # Read the number of Answer RRs
-    temp = struct.unpack_from("2B",packet,offset);
+    temp = struct.unpack_from("!2B",packet,offset);
     count_of_answer_RR = temp[0]<<8+temp[1]
     offset += 2;
     packet_info['AnswerRR'] = count_of_answer_RR;
 
     # Read the number of Authority RRs
-    temp = struct.unpack_from("2B",packet,offset);
+    temp = struct.unpack_from("!2B",packet,offset);
     count_of_authority_RR = temp[0]<<8+temp[1]
     offset += 2;
     packet_info['AuthorityRR'] = count_of_authority_RR;
 
     # Read the number of Additional RRs
-    temp = struct.unpack_from("2B",packet,offset);
+    temp = struct.unpack_from("!2B",packet,offset);
     count_of_additional_RR = temp[0]<<8+temp[1]
     offset += 2;
     packet_info['AdditionalRR'] = count_of_additional_RR;
@@ -122,24 +122,24 @@ def read_dns_response(packet):
     # Read Queries
     Queries = [[]for i in range(count_of_questions)]
     for i in range(0,count_of_questions):
-        digit = struct.unpack_from("B",packet,offset);
+        digit = struct.unpack_from("!B",packet,offset);
         offset += 1;
         web_name = "";
         while(digit):
-            web_name += struct.unpack_from("c",packet,offset);
+            web_name += struct.unpack_from("!c",packet,offset);
             offset += 1;
             digit -= 1;
             if(digit==0):
-                digit = struct.unpack_from("B",packet,offset);
+                digit = struct.unpack_from("!B",packet,offset);
                 offset += 1;
                 if(digit!=0):
                     web_name += '.'
 
-        temp = struct.unpack_from("2B",packet,offset);
+        temp = struct.unpack_from("!2B",packet,offset);
         offset += 2;
         Type = temp[0]<<8+temp[1];
         Type = type_reader(Type);
-        temp = struct.unpack_from("2B",packet,offset);
+        temp = struct.unpack_from("!2B",packet,offset);
         offset += 2;
         Class = temp[0]<<8+temp[1];
         Class = type_reader(Class);
@@ -150,7 +150,7 @@ def read_dns_response(packet):
 
     # Read Answers
     Answers = [[]for i in range(count_of_answer_RR)];
-    for i in range(0,count_of_answer_RR):
+    #for i in range(0,count_of_answer_RR):
         
     return packet_info;
 
@@ -200,15 +200,16 @@ def main() -> None:
 
     out_sock, in_sock = make_datagram_sockets()
 
-    out_sock.bind(("192.168.0.7", 1053))
+    out_sock.bind(('', 1053))
 
-    out_sock.connect(("8.8.8.8", 53))
+    #out_sock.connect(("8.8.8.8", 53))
 
     packet = make_dns_packet()
 
-    out_sock.send(packet)
-    
-
+    out_sock.sendto(packet,("8.8.8.8",53))
+    #in_sock.bind(("",1053))
+    data,addr = out_sock.recvfrom(1024);
+    print(read_dns_response(data));
 
 if __name__ == "__main__":
     main()
