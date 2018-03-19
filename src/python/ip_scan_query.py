@@ -12,8 +12,10 @@ actions, include:
 
 import concurrent.futures
 import ipaddress
+import select
 import socket
 import subprocess
+import struct
 import time
 
 import numpy as np
@@ -25,7 +27,7 @@ class Query(object):
     '''
     This class does quering in a single process
     '''
-    def __init__(self, start_ip=None, end_ip=None, tcp=False, trace=False):
+    def __init__(self, port_num:int, start_ip=None, end_ip=None):
 
         if type(start_ip) != type(end_ip):
             raise ValueError("IP range has to be None or integers")
@@ -37,29 +39,40 @@ class Query(object):
             start_ip = ipaddress.IPv4Address(start_ip)
             end_ip   = ipaddress.IPv4Address(end_ip)
 
-        self.ip_range = range(int(start_ip), int(end_ip))
+        self.__ip_range = range(int(start_ip), int(end_ip))
 
-        self.__prepare_socket_factory()
-        self.__set_dig_option(tcp=tcp, trace=trace)
+        self.__prepare_socket_factory(port_num)
 
         self.hostname    = "email-jxm959-case-edu.ipl.eecs.case.edu"
         self.ip_address  = "198.168.2.16"
         self.__packet    = self_dns.make_dns_packet()
+        self.__udp_spoofing(port_num)
 
         self.output_object = Result()
 
 
-    def __prepare_socket_factory(self) -> None:
+    def __prepare_socket_factory(self, port_num:int) -> None:
         '''
         factory function for building a pair of UDP socket,
         input socket is non-blocking
         '''
-        self.__output_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+        self.__output_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_UDP)
         self.__input_socket  = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
 
         self.__input_socket.setblocking(0)
 
-        # self.__input_socket.bind(('', 2048))
+        self.__input_socket.bind(('', port_num))
+
+    def __udp_spoofing(self, port_number:int):
+        '''
+        rewrite the UDP header to that the response will be
+        sent to another socket
+        '''
+        destination_port = 53
+        length = 8 + len(self.__packet)
+
+        udp_header = struct.pack("!4H", port_number, destination_port, length, 0)
+        self.__packet = udp_header + self.__packet
 
 
     def __set_dig_option(self, tcp=False, trace=False) -> None:
@@ -74,19 +87,41 @@ class Query(object):
         '''
         send one packet to the ip_address
         '''
-        self.__output_socket.sendto(self.__packet, (str(ip_address), 53))
+        # self.__output_socket.sendto(self.__packet, (str(ip_address), 53))
+
+        self.__output_socket.sendto(self.__packet, (str("8.8.8.8"), 53))
+        self.__output_socket.sendto(self.__packet, (str("114.114.114.114"), 53))
+
+
+    def __read_from_socket(self, timeout=2):
+        '''
+        selecting/polling the socket until timeout
+        '''
+        while(True):
+            try:
+                [read], write, expt = select.select([self.__input_socket],[],[], timeout)
+                data = read.recv(1000)
+
+                print("I get these: %d"%(len(data)))
+                
+            except (KeyboardInterrupt, ValueError):
+                break
 
         
-    def launch_query(self) -> Result:
+    def launch_query(self, range_=None) -> Result:
         '''
         Nothing exciting, just a loop
         '''
         skip_list = SkipList()
-
+        
+        ip_range = self.__ip_range if not range_ else range_
+            
         try:
-            for ip in self.ip_range:
+            for ip in ip_range:
                 if skip_list.is_valid(ipaddress.IPv4Address(ip)):
                     self.__launch_query(ipaddress.IPv4Address(ip))
+
+            self.__read_from_socket()
 
         except KeyboardInterrupt:
             pass
@@ -112,10 +147,15 @@ class Query(object):
     #     else:
     #         return "Unknown Error"
 
+    def __del__(self):
+        self.__output_socket.close()
+
+        self.__input_socket.close()
+
 
 class MultiprocessQuery(object):
     
-    def __init__(self, start_ip:str, end_ip:str, tcp=False, trace=False, process_num=4):
+    def __init__(self, start_ip:str, end_ip:str, process_num=4):
         self.process_num = process_num
         assert start_ip and end_ip, "start ip and end ip should not be empty"
 
@@ -127,10 +167,9 @@ class MultiprocessQuery(object):
 
         self.job_assignment = [
             {
+                "port_num" : 2048 + i,
                 "start_ip" : int(breakpoints[i]), 
                 "end_ip"   : int(breakpoints[i+1]), 
-                "tcp"      : tcp, 
-                "trace"    : trace
             } 
             for i in range(len(breakpoints)-1)]
 
@@ -226,9 +265,11 @@ class SkipList(object):
 
 if __name__ == "__main__":
 
-    time_a = time.time()
+    # time_a = time.time()
 
-    mq = MultiprocessQuery(start_ip="129.22.104.25", end_ip="129.22.104.35")
-    mq.run()
+    # mq = MultiprocessQuery(start_ip="129.22.104.25", end_ip="129.22.104.35")
+    # mq.run()
 
-    print("Time Elapsed: %6.2f seconds"%(time.time() - time_a))
+    # print("Time Elapsed: %6.2f seconds"%(time.time() - time_a))
+    q = Query(2048)
+    q.launch_query(["8.8.8.8", "114.114.114.114"])

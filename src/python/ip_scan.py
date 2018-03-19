@@ -83,15 +83,10 @@ def main_entry():
     email_switch = getattr(options, "Email Switch").startswith("email")
     process_num  = getattr(options, "Number of Processes")
 
-    if email_switch:
-        atexit.register(send_mail_notice)
-
     args = \
     {
         "start_ip"   : start_ip[0],
         "end_ip"     : end_ip[0],
-        "tcp"        : tcp_switch,
-        "trace"      : trace_switch,
         "process_num": process_num
     }
 
@@ -100,7 +95,7 @@ def main_entry():
     query_object = MultiprocessQuery(**args)
     query_object.run()
 
-    print("Time Elapsed: %6.2f seconds"%(time.time() - time_a))
+    print("END Time Elapsed: %6.2f seconds"%(time.time() - time_a))
 
 if __name__ == "__main__":
     main_entry()
