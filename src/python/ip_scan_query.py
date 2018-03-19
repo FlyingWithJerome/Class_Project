@@ -57,7 +57,7 @@ class Query(object):
         input socket is non-blocking
         '''
         self.__output_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_UDP)
-        self.__input_socket  = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+        self.__input_socket  = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_UDP)
 
         self.__input_socket.setblocking(0)
 
@@ -101,9 +101,9 @@ class Query(object):
             try:
                 [read], write, expt = select.select([self.__input_socket],[],[], timeout)
                 data = read.recv(1000)
-
-                print("I get these: %d"%(len(data)))
                 
+                print("Packet length:", len(data))
+                # print(read_dns_response(packet))
             except (KeyboardInterrupt, ValueError):
                 break
 
