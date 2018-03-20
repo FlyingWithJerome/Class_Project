@@ -64,7 +64,7 @@ class Query(object):
 
         # self.hostname    = "email-jxm959-case-edu.ipl.eecs.case.edu"
         # self.ip_address  = "198.168.2.16"
-        self.__packet    = self_dns.make_dns_packet("case.edu")
+        self.__packet    = self_dns.make_dns_packet("email-jxm959-case-edu.ipl.eecs.case.edu")
         self.__udp_spoofing(port_num)
 
         self.__output_object = Result(output_file="dns_result_{}.csv".format(port_num))
@@ -85,7 +85,7 @@ class Query(object):
 
     def __udp_spoofing(self, port_number:int):
         '''
-        rewrite the UDP header to that the response will be
+        rewrite the UDP header so that the response will be
         sent to another socket
         '''
         destination_port = 53
@@ -128,7 +128,6 @@ class Query(object):
                 source = _get_source_address(data)
                 
                 if self.__filter(ipaddress.IPv4Address(source)):
-                    print("get one from", source)
                     dns_length = len(data) - 28
                     status     = self_dns.read_dns_response(data[28:])["RCode"]
 

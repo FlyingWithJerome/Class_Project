@@ -16,22 +16,20 @@ def merge_files(final_output:str, file_pattern:str):
     file_lists = glob.glob(file_pattern)
 
     with open(final_output, "w") as file_output:
-        first_header = True
 
-        for file in file_lists:
-            with open(file, "r") as single_input:
-                if not first_header:   
-                    first_line = single_input.readline() 
+        for file_index in range(len(file_lists)):
+            with open(file_lists[file_index], "r") as single_input:
+                if file_index != 0:   
+                    single_input.__next__() 
 
                 for line in single_input:
                     file_output.write(line)
-                first_header = False 
-                          
-            os.remove(file)
+
+            os.remove(file_lists[file_index])
 
 class Result(object):
 
-    def __init__(self, threshold=100, output_file=None):
+    def __init__(self, threshold=20, output_file=None):
 
         self.__output_file = output_file if output_file else "dns_output.csv"
         self.__result_list = []
@@ -51,7 +49,7 @@ class Result(object):
             }
         )
 
-        if len(self.__output_file) == self.__threshold:
+        if len(self.__result_list) == self.__threshold:
             self.__flush()
             del self.__result_list[:]
 
@@ -85,7 +83,6 @@ class Result(object):
         else:
             with open(self.__output_file, "a") as out:
                 output_csv = csv.DictWriter(out, fieldnames=header)
-                output_csv.writeheader()
                 output_csv.writerows(self.__result_list)
 
     def __del__(self):
