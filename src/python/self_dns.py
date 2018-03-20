@@ -3,13 +3,35 @@ import ipaddress
 import subprocess
 import struct
 import sys
+import random
 
 SKIP_LIST = [int(ipaddress.IPv4Address("0.0.0.0")),
         range(int(ipaddress.IPv4Address("192.168.0.1")),int(ipaddress.IPv4Address("192.168.255.255"))),
         int(ipaddress.IPv4Address("127.0.0.1"))]
 
+def make_query_name(questionWebsite):
+    output = "";
+    this_piece = "";
+    length = len(questionWebsite);
+    count = 0;i = 0;
+    while(length>i):
+        if(questionWebsite[i]=='.'):
+            output += chr(count);
+            output += this_piece;
+            this_piece = "";
+            count = 0;
+            i += 1;
+        else:
+            this_piece += questionWebsite[i];
+            count += 1;
+            i += 1;
+    output += chr(count);
+    output += this_piece;
+    output += chr(0);
+    return output;
 
-def make_dns_packet():
+
+def make_dns_packet(questionWebsite):
     '''
     make a customize udp packet (for dns query, carries a message to
     system admins)
@@ -17,7 +39,7 @@ def make_dns_packet():
     message = "Tell me, senpai!\0"
     message = bytes(message, "ASCII")
 
-    transaction_id = 0xffff # 2 byte short
+    transaction_id = random.randint(0,65535) # 2 byte short
     control        = 0x0100
     q_counts       = 0x0001
     ans_counts     = 0x0000
@@ -25,8 +47,8 @@ def make_dns_packet():
     add_counts     = 0x0000 # 2 byte short
     type_          = 0x0001 # 2 byte short (A)
     class_         = 0x0001 # 2 byte short (IN)
-    query_website  = bytes("\4case\3edu\0", "ASCII")
 
+    query_website  = bytes(make_query_name(questionWebsite), "ASCII");
     # format_= "!HH4H%ds2H%ds"%(len(query_website), len(message))
 
     header = struct.pack("!6H", transaction_id, control, q_counts, ans_counts, auth_counts, add_counts)
@@ -286,7 +308,7 @@ def main() -> None:
 
     #out_sock.connect(("8.8.8.8", 53))
 
-    packet = make_dns_packet()
+    packet = make_dns_packet("email-jxm959-case-edu.ipl.eecs.case.edu")
 
     out_sock.sendto(packet,("8.8.8.8",53))
     #in_sock.bind(("",1053))
