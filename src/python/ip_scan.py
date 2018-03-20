@@ -35,15 +35,6 @@ def parse_arguments():
     parser.add_argument("Number of Processes", type=int, nargs="?", default=4, 
                         help="The number of concurrently working processes, default to be 4")
 
-    parser.add_argument("TCP Connection", type=str, nargs="?", default="notcp", 
-                        help="Whether to connect with TCP")
-
-    parser.add_argument("Trace Switch", type=str, nargs="?", default="notrace", 
-                        help="Whether to resolve from root")
-
-    parser.add_argument("Email Switch", type=str, nargs="?", default="email", 
-                        help="Whether to send email notice")
-
     return parser.parse_args()
 
 
@@ -77,10 +68,6 @@ def main_entry():
 
     start_ip = getattr(options, "Start IP Address")
     end_ip   = getattr(options, "End IP Address")
-
-    tcp_switch   = getattr(options, "TCP Connection").startswith("tcp")
-    trace_switch = getattr(options, "Trace Switch").startswith("trace")
-    email_switch = getattr(options, "Email Switch").startswith("email")
     process_num  = getattr(options, "Number of Processes")
 
     args = \

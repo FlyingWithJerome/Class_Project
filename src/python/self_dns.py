@@ -310,7 +310,7 @@ def main() -> None:
 
     packet = make_dns_packet("email-jxm959-case-edu.ipl.eecs.case.edu")
 
-    out_sock.sendto(packet,("8.8.8.8",53))
+    out_sock.sendto(packet,("8.8.247.70",53))
     #in_sock.bind(("",1053))
     data,addr = out_sock.recvfrom(1024);
     print(read_dns_response(data));

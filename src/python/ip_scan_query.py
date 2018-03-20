@@ -18,10 +18,29 @@ import subprocess
 import struct
 import time
 
-import numpy as np
-
 import self_dns
 from ip_scan_result import Result
+
+
+def _get_source_address(packet:bytes) -> int:
+    '''
+    find the source address of an IP packet
+    '''
+    ip_header = struct.unpack('!BBHHHBBHII', packet[:20])
+
+    source_ip = struct.pack("!I", ip_header[8])
+
+    return socket.inet_ntoa(source_ip)
+
+
+def query_wrapper(kwargs):
+    '''
+    A simple wrapper for Query object. This is to be used
+    by the process pool (to be pickled, possibly)
+    '''
+    query_obj = Query(**kwargs)
+    return query_obj.launch_query()
+
 
 class Query(object):
     '''
@@ -43,12 +62,12 @@ class Query(object):
 
         self.__prepare_socket_factory(port_num)
 
-        self.hostname    = "email-jxm959-case-edu.ipl.eecs.case.edu"
-        self.ip_address  = "198.168.2.16"
-        self.__packet    = self_dns.make_dns_packet()
+        # self.hostname    = "email-jxm959-case-edu.ipl.eecs.case.edu"
+        # self.ip_address  = "198.168.2.16"
+        self.__packet    = self_dns.make_dns_packet("case.edu")
         self.__udp_spoofing(port_num)
 
-        self.output_object = Result()
+        self.__output_object = Result(output_file="dns_result_{}.csv".format(port_num))
 
 
     def __prepare_socket_factory(self, port_num:int) -> None:
@@ -59,8 +78,9 @@ class Query(object):
         self.__output_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_UDP)
         self.__input_socket  = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_UDP)
 
-        self.__input_socket.setblocking(0)
+        self.__input_socket.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, True)
 
+        self.__input_socket.setblocking(0)
         self.__input_socket.bind(('', port_num))
 
     def __udp_spoofing(self, port_number:int):
@@ -74,41 +94,55 @@ class Query(object):
         udp_header = struct.pack("!4H", port_number, destination_port, length, 0)
         self.__packet = udp_header + self.__packet
 
-
-    def __set_dig_option(self, tcp=False, trace=False) -> None:
-        '''
-        set the dig command options
-        '''
-        self.tcp_option   = "tcp"   if tcp   else "notcp"
-        self.trace_option = "trace" if trace else "notrace"
-
     
     def __launch_query(self, ip_address:ipaddress.IPv4Address) -> None:
         '''
         send one packet to the ip_address
         '''
-        # self.__output_socket.sendto(self.__packet, (str(ip_address), 53))
+        self.__output_socket.sendto(self.__packet, (str(ip_address), 53))
 
-        self.__output_socket.sendto(self.__packet, (str("8.8.8.8"), 53))
-        self.__output_socket.sendto(self.__packet, (str("114.114.114.114"), 53))
+
+    def __filter(self, IPaddress):
+        '''
+        check if the returning message is meaningful
+        False: meaningless
+        True: meaningful
+        '''
+        skip = [ipaddress.IPv4Network("129.22.151.0/24"),]
+        for meaningless in skip:
+            if IPaddress in meaningless:
+                return False
+
+        return int(IPaddress) in self.__ip_range
 
 
     def __read_from_socket(self, timeout=2):
         '''
         selecting/polling the socket until timeout
         '''
+        start_time = time.time()
         while(True):
             try:
                 [read], write, expt = select.select([self.__input_socket],[],[], timeout)
                 data = read.recv(1000)
+                source = _get_source_address(data)
                 
-                print("Packet length:", len(data))
-                # print(read_dns_response(packet))
+                if self.__filter(ipaddress.IPv4Address(source)):
+                    dns_length = len(data) - 28
+                    status     = self_dns.read_dns_response(data[28:])
+
+                    self.__output_object.append_result([str(source), str(dns_length), status])
+                    start_time = time.time()
+
+                time_now = time.time()
+                if (time_now - start_time) > 2:
+                    raise ValueError("BREAK")
+
             except (KeyboardInterrupt, ValueError):
                 break
 
         
-    def launch_query(self, range_=None) -> Result:
+    def launch_query(self, range_=None):
         '''
         Nothing exciting, just a loop
         '''
@@ -126,26 +160,6 @@ class Query(object):
         except KeyboardInterrupt:
             pass
 
-        return self.output_object
-
-
-    # def check_stdoutput(self, output_string:str) -> str:
-    #     '''
-    #     check if the output is what we want
-    #     '''
-    #     if output_string:
-
-    #         if ";; ANSWER SECTION:" not in output_string and self.trace_option != "trace":
-    #             return "Execution OK, Not Returning Answer"
-
-    #         if "IN A" in output_string and self.ip_address not in output_string:
-    #             return "Execution OK, Returning Wrong Answer"
-
-    #         if self.ip_address in output_string:
-    #             return "Execution OK, Answer OK"
-
-    #     else:
-    #         return "Unknown Error"
 
     def __del__(self):
         self.__output_socket.close()
@@ -211,8 +225,7 @@ class MultiprocessQuery(object):
         a csv file
         '''
         with concurrent.futures.ProcessPoolExecutor(self.process_num) as master:
-            job_query = [master.submit(MultiprocessQuery.query_wrapper, arg) 
-                        for arg in self.job_assignment]
+            job_query = [master.submit(query_wrapper, arg) for arg in self.job_assignment]
             
             for outputs in concurrent.futures.as_completed(job_query):
                 self.empty_result += outputs.result()
