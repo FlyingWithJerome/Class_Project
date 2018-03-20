@@ -19,6 +19,7 @@ from email.header import Header
 from email.mime.text import MIMEText
 
 from ip_scan_query import MultiprocessQuery
+from ip_scan_result import merge_files
 
 def parse_arguments():
     '''
@@ -83,6 +84,10 @@ def main_entry():
     query_object.run()
 
     print("END Time Elapsed: %6.2f seconds"%(time.time() - time_a))
+
+    print("Merging Outputs...")
+    merge_files("scan_output.csv", "dns_result_*.csv")
+
 
 if __name__ == "__main__":
     main_entry()

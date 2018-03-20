@@ -6,6 +6,28 @@ output to a csv
 '''
 
 import csv
+import glob
+import os
+
+def merge_files(final_output:str, file_pattern:str):
+    '''
+    merge all the files into one single output
+    '''
+    file_lists = glob.glob(file_pattern)
+
+    with open(final_output, "w") as file_output:
+        first_header = True
+
+        for file in file_lists:
+            with open(file, "r") as single_input:
+                if not first_header:   
+                    first_line = single_input.readline() 
+
+                for line in single_input:
+                    file_output.write(line)
+                first_header = False 
+                          
+            os.remove(file)
 
 class Result(object):
 

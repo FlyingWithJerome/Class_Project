@@ -128,8 +128,9 @@ class Query(object):
                 source = _get_source_address(data)
                 
                 if self.__filter(ipaddress.IPv4Address(source)):
+                    print("get one from", source)
                     dns_length = len(data) - 28
-                    status     = self_dns.read_dns_response(data[28:])
+                    status     = self_dns.read_dns_response(data[28:])["RCode"]
 
                     self.__output_object.append_result([str(source), str(dns_length), status])
                     start_time = time.time()
@@ -187,8 +188,6 @@ class MultiprocessQuery(object):
             } 
             for i in range(len(breakpoints)-1)]
 
-        self.empty_result = Result()        
-
 
     @staticmethod
     def query_wrapper(kwargs):
@@ -228,10 +227,7 @@ class MultiprocessQuery(object):
             job_query = [master.submit(query_wrapper, arg) for arg in self.job_assignment]
             
             for outputs in concurrent.futures.as_completed(job_query):
-                self.empty_result += outputs.result()
-
-            self.empty_result.flush()
-
+                pass
 
 
 class SkipList(object):
