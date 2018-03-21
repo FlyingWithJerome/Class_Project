@@ -5,7 +5,6 @@ This implement the result object, which collects the result from queries and
 output to a csv
 '''
 
-import csv
 import glob
 import os
 
@@ -51,7 +50,7 @@ class Result(object):
 
         if len(self.__result_list) == self.__threshold:
             self.__flush()
-            del self.__result_list[:]
+            self.__result_list.clear()
 
 
     def __add__(self, another):
@@ -74,16 +73,17 @@ class Result(object):
 
         if not self.__file_existed:
             with open(self.__output_file, "w") as out:
-                output_csv = csv.DictWriter(out, fieldnames=header)
-                output_csv.writeheader()
-                output_csv.writerows(self.__result_list)
+                out.write(",".join(header) + "\n")
+                
+                for members in self.__result_list:
+                    out.write(",".join([members["IP address"], members["DNS Packet Length"], members["Status"]]) + "\n")
 
                 self.__file_existed = True
 
         else:
             with open(self.__output_file, "a") as out:
-                output_csv = csv.DictWriter(out, fieldnames=header)
-                output_csv.writerows(self.__result_list)
+                for members in self.__result_list:
+                    out.write(",".join([members["IP address"], members["DNS Packet Length"], members["Status"]]) + "\n")
 
     def __del__(self):
         if len(self.__result_list) > 0:

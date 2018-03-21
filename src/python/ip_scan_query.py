@@ -6,20 +6,24 @@ actions, include:
 
 - Class
     1. Query (single quering)
-    2. MultiprocessQuery (quering with multiprocess)
+    2. MultiprocessQuery (quering with multiprocessing)
     3. SkipList (check if skip ipaddress)
 '''
 
 import concurrent.futures
 import ipaddress
+import queue
 import select
 import socket
-import subprocess
 import struct
 import time
+import multiprocessing
 
 import self_dns
 from ip_scan_result import Result
+
+_BEGIN_SIGNAL = 1
+_END_SIGNAL   = 2
 
 
 def _get_source_address(packet:bytes) -> int:
@@ -41,12 +45,20 @@ def query_wrapper(kwargs):
     query_obj = Query(**kwargs)
     return query_obj.launch_query()
 
+def collect_wrapper(kwargs):
+    '''
+    A simple wrapper for Query object. This is to be used
+    by the process pool (to be pickled, possibly)
+    '''
+    collect_obj = Collector(**kwargs)
+    return collect_obj.read()
+
 
 class Query(object):
     '''
     This class does quering in a single process
     '''
-    def __init__(self, port_num:int, start_ip=None, end_ip=None):
+    def __init__(self, port_num:int, queue_:"return from pipe", start_ip=None, end_ip=None):
 
         if type(start_ip) != type(end_ip):
             raise ValueError("IP range has to be None or integers")
@@ -58,16 +70,19 @@ class Query(object):
             start_ip = ipaddress.IPv4Address(start_ip)
             end_ip   = ipaddress.IPv4Address(end_ip)
 
-        self.__ip_range = range(int(start_ip), int(end_ip))
+        self.__ip_range = range(int(start_ip), int(end_ip))        
 
         self.__prepare_socket_factory(port_num)
 
-        # self.hostname    = "email-jxm959-case-edu.ipl.eecs.case.edu"
-        # self.ip_address  = "198.168.2.16"
         self.__packet    = self_dns.make_dns_packet("email-jxm959-case-edu.ipl.eecs.case.edu")
         self.__udp_spoofing(port_num)
 
-        self.__output_object = Result(output_file="dns_result_{}.csv".format(port_num))
+        self.__start_from = ipaddress.IPv4Address(start_ip)
+        self.__end_to     = ipaddress.IPv4Address(end_ip) - 1
+
+        self.__queue = queue_
+
+        self.__start_time = time.time()
 
 
     def __prepare_socket_factory(self, port_num:int) -> None:
@@ -75,15 +90,10 @@ class Query(object):
         factory function for building a pair of UDP socket,
         input socket is non-blocking
         '''
-        self.__output_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_UDP)
-        self.__input_socket  = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_UDP)
+        self.__output_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_UDP)    
+        self.__output_socket.setblocking(0)
 
-        self.__input_socket.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, True)
-
-        self.__input_socket.setblocking(0)
-        self.__input_socket.bind(('', port_num))
-
-    def __udp_spoofing(self, port_number:int):
+    def __udp_spoofing(self, port_number:int) -> None:
         '''
         rewrite the UDP header so that the response will be
         sent to another socket
@@ -101,8 +111,67 @@ class Query(object):
         '''
         self.__output_socket.sendto(self.__packet, (str(ip_address), 53))
 
+        
+    def launch_query(self, range_=None) -> None:
+        '''
+        Nothing exciting, just a loop
+        '''
+        skip_list = SkipList()
+        
+        ip_range = self.__ip_range if not range_ else range_
+            
+        try:
+            self.__queue.put(_BEGIN_SIGNAL)
+            for ip in ip_range:
+                if skip_list.is_valid(ipaddress.IPv4Address(ip)):
+                    self.__launch_query(ipaddress.IPv4Address(ip))
 
-    def __filter(self, IPaddress):
+        except KeyboardInterrupt:
+            pass
+
+        self.__queue.put(_END_SIGNAL)
+
+
+    def __del__(self):
+        self.__output_socket.close()
+
+        print("Send {} packets from {} to {} for {:4.2f} s".format(int(self.__end_to)-int(self.__start_from),
+            str(self.__start_from),
+            str(self.__end_to),
+            time.time()-self.__start_time))
+
+
+
+class Collector(object):
+
+    def __init__(self, port_number:int, queue_:"return from queue", lock_:"process lock", start_ip=None, end_ip=None):
+
+        self.__input_socket  = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_UDP)
+        self.__input_socket.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, True)
+
+        self.__input_socket.setblocking(0)
+        self.__input_socket.bind(('', port_number))
+
+        self.__output_object = Result(output_file="dns_result_{}.csv".format(port_number))
+
+        self.__queue = queue_
+        self.__lock  = lock_
+
+        self.__port_num = port_number
+
+        start_ip = ipaddress.IPv4Address(start_ip)
+        end_ip   = ipaddress.IPv4Address(end_ip)
+
+        self.__ip_range = range(int(start_ip), int(end_ip))
+        self.__start_from = str(ipaddress.IPv4Address(start_ip))
+        self.__end_to     = str(ipaddress.IPv4Address(end_ip) - 1)
+
+        self.__find_result = 0
+        self.__had_cleaned = False
+        self.__start_time = time.time()
+
+
+    def __filter(self, IPaddress:ipaddress.IPv4Network) -> bool:
         '''
         check if the returning message is meaningful
         False: meaningless
@@ -116,11 +185,21 @@ class Query(object):
         return int(IPaddress) in self.__ip_range
 
 
-    def __read_from_socket(self, timeout=2):
+    def __read_from_socket(self, timeout=20) -> None:
         '''
         selecting/polling the socket until timeout
         '''
-        start_time = time.time()
+        while(True):
+            try:
+                signal = self.__queue.get_nowait()
+                if signal == _BEGIN_SIGNAL:
+                    break
+
+            except queue.Empty:
+                pass
+
+        query_ends = False
+
         while(True):
             try:
                 [read], write, expt = select.select([self.__input_socket],[],[], timeout)
@@ -133,38 +212,58 @@ class Query(object):
 
                     self.__output_object.append_result([str(source), str(dns_length), status])
                     start_time = time.time()
+                    self.__find_result += 1
+
+                if not query_ends:
+                    signal = self.__queue.get_nowait()
+                    if signal == _END_SIGNAL:
+                        start_time = time.time()
+                    print("Permit to exit")
+                    query_ends = True
 
                 time_now = time.time()
-                if (time_now - start_time) > 2:
-                    raise ValueError("BREAK")
+
+                if query_ends:
+                    if (time_now - start_time) > timeout:
+                        raise ValueError("BREAK")
 
             except (KeyboardInterrupt, ValueError):
+                self.__clean_up()
                 break
 
-        
-    def launch_query(self, range_=None):
+            except queue.Empty:
+                pass
+
+    def read(self) -> None:
         '''
-        Nothing exciting, just a loop
+        begin to read when receive the signals
+        '''   
+        self.__read_from_socket()
+
+    def __clean_up(self) -> None:
         '''
-        skip_list = SkipList()
-        
-        ip_range = self.__ip_range if not range_ else range_
-            
+        replace __del__ method (not reliable in multiprocess)
+        '''
+        self.__input_socket.close()
+        print("ON CLEANED UP")
+        del self.__output_object
+        self.__lock.acquire()
         try:
-            for ip in ip_range:
-                if skip_list.is_valid(ipaddress.IPv4Address(ip)):
-                    self.__launch_query(ipaddress.IPv4Address(ip))
+            print("Collector Range {} -> {} (Bind to port {})\n".format(self.__start_from, self.__end_to, self.__port_num),
+                "---------------------------------\n",
+                "Find {} valid resolvers\n".format(self.__find_result),
+                "---------------------------------\n",
+                "Collector Life: %6.2f s\n"%(time.time()-self.__start_time),
+                "==================================\n")
+            self.__had_cleaned = True
 
-            self.__read_from_socket()
-
-        except KeyboardInterrupt:
-            pass
-
+        finally:
+            self.__lock.release()
+            
 
     def __del__(self):
-        self.__output_socket.close()
-
-        self.__input_socket.close()
+        if not self.__had_cleaned:
+            self.__clean_up()
 
 
 class MultiprocessQuery(object):
@@ -179,13 +278,30 @@ class MultiprocessQuery(object):
         # split ip intervals for each workers
         breakpoints = self.__assign_jobs(start_ip, end_ip, process_num)
 
-        self.job_assignment = [
-            {
+        self.__job_query     = []
+        self.__job_collector = []
+
+        lock = multiprocessing.Lock()
+
+        for i in range(len(breakpoints)-1):
+            smart_manager = multiprocessing.Manager()
+            signal_queue   = smart_manager.Queue()
+
+            self.__job_query.append(
+                {
                 "port_num" : 2048 + i,
+                "queue_"   : signal_queue,
                 "start_ip" : int(breakpoints[i]), 
-                "end_ip"   : int(breakpoints[i+1]), 
-            } 
-            for i in range(len(breakpoints)-1)]
+                "end_ip"   : int(breakpoints[i+1])
+                })
+            self.__job_collector.append(
+                {
+                "port_number" : 2048 + i,
+                "queue_"      : signal_queue,
+                "lock_"       : lock,
+                "start_ip"    : int(breakpoints[i]), 
+                "end_ip"      : int(breakpoints[i+1])
+                })
 
 
     @staticmethod
@@ -222,11 +338,20 @@ class MultiprocessQuery(object):
         execute the jobs concurrently and write the results to
         a csv file
         '''
-        with concurrent.futures.ProcessPoolExecutor(self.process_num) as master:
-            job_query = [master.submit(query_wrapper, arg) for arg in self.job_assignment]
-            
-            for outputs in concurrent.futures.as_completed(job_query):
-                pass
+        objects = []
+        for i in range(len(self.__job_collector)):
+            objects.append(multiprocessing.Process(target=collect_wrapper, args=(self.__job_collector[i],)))
+            objects.append(multiprocessing.Process(target=query_wrapper, args=(self.__job_query[i],)))
+
+        for jobs in objects:
+            jobs.start()
+
+        for jobs in objects:
+            jobs.join()
+
+        # for jobs in objects:
+        #     jobs.terminate()
+
 
 
 class SkipList(object):
