@@ -42,9 +42,9 @@ class Result(object):
         '''
         self.__result_list.append(
             {
-                "IP address"       : list_of_result[0],
-                "DNS Packet Length": list_of_result[1],
-                "Status"           : list_of_result[2],
+                "IP address"        : list_of_result[0],
+                "DNS Packet Length" : list_of_result[1],
+                "Response Status"   : list_of_result[2],
             }
         )
 
@@ -69,21 +69,21 @@ class Result(object):
         '''
         flush the output to the csv file
         '''
-        header = ["IP address", "DNS Packet Length", "Status"]
+        header = ["IP address", "DNS Packet Length", "Response Status"]
 
         if not self.__file_existed:
             with open(self.__output_file, "w") as out:
                 out.write(",".join(header) + "\n")
                 
                 for members in self.__result_list:
-                    out.write(",".join([members["IP address"], members["DNS Packet Length"], members["Status"]]) + "\n")
+                    out.write(",".join([members["IP address"], members["DNS Packet Length"], members["Response Status"]]) + "\n")
 
                 self.__file_existed = True
 
         else:
             with open(self.__output_file, "a") as out:
                 for members in self.__result_list:
-                    out.write(",".join([members["IP address"], members["DNS Packet Length"], members["Status"]]) + "\n")
+                    out.write(",".join([members["IP address"], members["DNS Packet Length"], members["Response Status"]]) + "\n")
 
     def __del__(self):
         if len(self.__result_list) > 0:

@@ -88,7 +88,7 @@ def opcode_reader(opcode):
     return types.get(opcode,'UNKNOWN');
 
 def rcode_reader(rcode):
-    types=  {0:'No error',1:'Format error',2:'Server failure',3:'Name Error',
+    types=  {0:'No Error',1:'Format Error',2:'Server Failure',3:'Name Error',
             4:'Not Implemented',5:'Refused',6:'YXDomain',7:'YXRRSet',
             8:'NXRRSet',9:'NotAuth',10:'NotZone'};
     return types.get(rcode,'UNKNOWN');
@@ -201,7 +201,11 @@ def read_dns_response(packet):
             if(current_byte>>4 == 12):# Identifies a pointer
                 temp = struct.unpack_from("!2B",packet,offset-1);
                 temp_offset = (temp[0]&0x0f)<<8|temp[1];
-                web_name += read_pointer_from_offset(packet,temp_offset);
+                try:
+                    web_name += read_pointer_from_offset(packet,temp_offset);
+                    packet_info["Pointer"] = "Pointer OK"
+                except struct.error:
+                    packet_info["Pointer"] = "Pointer ERROR"
                 offset += 1;
                 break;# Break when finished dealing with pointer
             else:# Not a pointer

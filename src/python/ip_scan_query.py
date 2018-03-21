@@ -208,9 +208,12 @@ class Collector(object):
                 
                 if self.__filter(ipaddress.IPv4Address(source)):
                     dns_length = len(data) - 28
-                    status     = self_dns.read_dns_response(data[28:])["RCode"]
+                    try:
+                        status     = self_dns.read_dns_response(data[28:])["RCode"]
 
-                    self.__output_object.append_result([str(source), str(dns_length), status])
+                        self.__output_object.append_result([str(source), str(dns_length), status])
+                    except struct.error:
+                        self.__output_object.append_result([str(source), str(dns_length), "Unpack ERROR"])
                     start_time = time.time()
                     self.__find_result += 1
 
@@ -228,8 +231,11 @@ class Collector(object):
                         raise ValueError("BREAK")
 
             except (KeyboardInterrupt, ValueError):
-                self.__clean_up()
-                break
+                if query_ends:
+                    self.__clean_up()
+                    break
+                else: 
+                    pass
 
             except queue.Empty:
                 pass
