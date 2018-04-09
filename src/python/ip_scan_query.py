@@ -8,6 +8,7 @@ actions, include:
     1. Query (single quering)
     2. MultiprocessQuery (quering with multiprocessing)
     3. SkipList (check if skip ipaddress)
+    4. Listener (listens the results)
 '''
 
 import concurrent.futures
@@ -21,6 +22,7 @@ import multiprocessing
 
 import self_dns
 from ip_scan_result import Result
+from ip_scan_monitor import Monitor
 
 _BEGIN_SIGNAL = 1
 _END_SIGNAL   = 2
@@ -50,8 +52,16 @@ def collect_wrapper(kwargs):
     A simple wrapper for Query object. This is to be used
     by the process pool (to be pickled, possibly)
     '''
-    collect_obj = Collector(**kwargs)
+    collect_obj = Listener(**kwargs)
     return collect_obj.read()
+
+def monitor_wrapper(kwargs):
+    '''
+    A simple wrapper for Query object. This is to be used
+    by the process pool (to be pickled, possibly)
+    '''
+    monitor_obj = Monitor(**kwargs)
+    return monitor_obj.sniff_sniff()
 
 
 class Query(object):
@@ -74,7 +84,7 @@ class Query(object):
 
         self.__prepare_socket_factory(port_num)
 
-        self.__packet    = self_dns.make_dns_packet("email-jxm959-case-edu.ipl.eecs.case.edu")
+        self.__packet    = self_dns.make_dns_packet("one.yumi.ipl.eecs.case.edu")
         self.__udp_spoofing(port_num)
 
         self.__start_from = ipaddress.IPv4Address(start_ip)
@@ -131,7 +141,6 @@ class Query(object):
 
         self.__queue.put(_END_SIGNAL)
 
-
     def __del__(self):
         self.__output_socket.close()
 
@@ -142,7 +151,7 @@ class Query(object):
 
 
 
-class Collector(object):
+class Listener(object):
 
     def __init__(self, port_number:int, queue_:"return from queue", lock_:"process lock", start_ip=None, end_ip=None):
 
@@ -255,11 +264,11 @@ class Collector(object):
         del self.__output_object
         self.__lock.acquire()
         try:
-            print("Collector Range {} -> {} (Bind to port {})\n".format(self.__start_from, self.__end_to, self.__port_num),
+            print("Listener Range {} -> {} (Bind to port {})\n".format(self.__start_from, self.__end_to, self.__port_num),
                 "---------------------------------\n",
                 "Find {} valid resolvers\n".format(self.__find_result),
                 "---------------------------------\n",
-                "Collector Life: %6.2f s\n"%(time.time()-self.__start_time),
+                "Listener Life: %6.2f s\n"%(time.time()-self.__start_time),
                 "==================================\n")
             self.__had_cleaned = True
 
@@ -345,9 +354,13 @@ class MultiprocessQuery(object):
         a csv file
         '''
         objects = []
+
         for i in range(len(self.__job_collector)):
             objects.append(multiprocessing.Process(target=collect_wrapper, args=(self.__job_collector[i],)))
             objects.append(multiprocessing.Process(target=query_wrapper, args=(self.__job_query[i],)))
+
+        monitor_job = multiprocessing.Process(target=monitor_wrapper, args=({},))
+        monitor_job.start()
 
         for jobs in objects:
             jobs.start()
@@ -355,8 +368,13 @@ class MultiprocessQuery(object):
         for jobs in objects:
             jobs.join()
 
+        monitor_job.join()
+
+
         # for jobs in objects:
         #     jobs.terminate()
+
+    
 
 
 
