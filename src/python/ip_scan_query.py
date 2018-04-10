@@ -356,8 +356,8 @@ class MultiprocessQuery(object):
             objects.append(multiprocessing.Process(target=collect_wrapper, args=(self.__job_collector[i],)))
             objects.append(multiprocessing.Process(target=query_wrapper, args=(self.__job_query[i],)))
 
-        # monitor_job = multiprocessing.Process(target=monitor_wrapper, args=({},))
-        # monitor_job.start()
+        monitor_job = multiprocessing.Process(target=monitor_wrapper, args=({},))
+        monitor_job.start()
 
         for jobs in objects:
             jobs.start()
@@ -365,7 +365,7 @@ class MultiprocessQuery(object):
         for jobs in objects:
             jobs.join()
 
-        # monitor_job.join()
+        monitor_job.join()
 
 
         # for jobs in objects:

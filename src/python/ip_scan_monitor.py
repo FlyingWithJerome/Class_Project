@@ -24,7 +24,7 @@ class Monitor(object):
         self.__result_list   = []
 
     def __sniff_callback(self, packet):
-        if 2048 <= packet[scapy.all.UDP].sport <= 2053:
+        if 2048 <= packet[scapy.all.UDP].sport <= 2058:
             self.__sent_rate += 1
 
     def __sniff(self):
@@ -38,7 +38,7 @@ class Monitor(object):
 
         self.__generate_graph()
 
-        print("Monitor Exiting")
+        print("Monitor Exiting...")
 
     def sniff_sniff(self):
         return self.__sniff()
@@ -50,7 +50,7 @@ class Monitor(object):
             body_font  = {"fontname":"Helvetica"}
 
             plt.title("Packet Sent Rate Change \n(Avg Rate: %d Packet/Sec, Max Rate: %d Packet/Sec)"\
-            %(int(numpy.average(self.__result_list)), int(max(self.__result_list))), **title_font)
+            %(int(numpy.average(self.__result_list[:-10])), int(max(self.__result_list))), **title_font)
 
 
             plt.xlabel("Timeline (sec)", **body_font)

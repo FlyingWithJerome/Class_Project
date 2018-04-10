@@ -1,12 +1,26 @@
 #!/bin/bash
 
+start_ip=$1 
+end_ip=$2 
+processes=$3
+tmux=$4
+
 python_execution(){
-    sudo python3 ip_scan.py 8.8.8.0 8.8.80.255 5
+    if [ "$tmux" == "tmux" ]; then
+        python3 ip_scan.py ${start_ip} ${end_ip} ${processes}
+    else
+        sudo python3 ip_scan.py ${start_ip} ${end_ip} ${processes}
+    fi
 }
 
 
 tcp_dump(){
-    sudo tcpdump -i eth0 -B 40960 src 129.22.150.112 and udp and dst port 53 > cap.txt
+    rm -f cap.txt
+    if [ "$tmux" == "tmux" ]; then
+        tcpdump -i eth0 -B 40960 src 129.22.150.112 and udp > cap.txt
+    else
+        sudo tcpdump -i eth0 -B 40960 src 129.22.150.112 and udp > cap.txt
+    fi
 }
 
 python_execution & 
