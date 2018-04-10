@@ -1,9 +1,9 @@
 import random
 import socket
 import struct
-def bad_packet():
+def bad_packet(identification):
     
-    transaction_id = random.randint(0,65535) # 2 byte short
+    transaction_id = identification # 2 byte short
     control        = 0x8180
     q_counts       = 0x0001
     ans_counts     = 0x0002
@@ -22,7 +22,7 @@ def bad_packet():
 
     packet = header+Queries+Answer1+Answer2;
 
-    print(packet);
+    # print(packet);
 
     return header+Queries+Answer1+Answer2;
 
