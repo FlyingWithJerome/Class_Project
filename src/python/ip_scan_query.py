@@ -33,11 +33,9 @@ def _get_source_address(packet:bytes) -> int:
     find the source address of an IP packet
     '''
     ip_header = struct.unpack('!BBHHHBBHII', packet[:20])
-
     source_ip = struct.pack("!I", ip_header[8])
 
     return socket.inet_ntoa(source_ip)
-
 
 def query_wrapper(kwargs):
     '''
@@ -53,7 +51,7 @@ def collect_wrapper(kwargs):
     by the process pool (to be pickled, possibly)
     '''
     collect_obj = Listener(**kwargs)
-    return collect_obj.read()
+    return collect_obj.listen()
 
 def monitor_wrapper(kwargs):
     '''
@@ -230,7 +228,7 @@ class Listener(object):
                     signal = self.__queue.get_nowait()
                     if signal == _END_SIGNAL:
                         start_time = time.time()
-                    print("Permit to exit")
+                    # print("Permit to exit")
                     query_ends = True
 
                 time_now = time.time()
@@ -249,9 +247,9 @@ class Listener(object):
             except queue.Empty:
                 pass
 
-    def read(self) -> None:
+    def listen(self) -> None:
         '''
-        begin to read when receive the signals
+        begin to listen when receive the signals
         '''   
         self.__read_from_socket()
 
@@ -260,7 +258,6 @@ class Listener(object):
         replace __del__ method (not reliable in multiprocess)
         '''
         self.__input_socket.close()
-        print("ON CLEANED UP")
         del self.__output_object
         self.__lock.acquire()
         try:
@@ -359,8 +356,8 @@ class MultiprocessQuery(object):
             objects.append(multiprocessing.Process(target=collect_wrapper, args=(self.__job_collector[i],)))
             objects.append(multiprocessing.Process(target=query_wrapper, args=(self.__job_query[i],)))
 
-        monitor_job = multiprocessing.Process(target=monitor_wrapper, args=({},))
-        monitor_job.start()
+        # monitor_job = multiprocessing.Process(target=monitor_wrapper, args=({},))
+        # monitor_job.start()
 
         for jobs in objects:
             jobs.start()
@@ -368,7 +365,7 @@ class MultiprocessQuery(object):
         for jobs in objects:
             jobs.join()
 
-        monitor_job.join()
+        # monitor_job.join()
 
 
         # for jobs in objects:

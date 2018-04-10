@@ -7,6 +7,7 @@ It can also generate a graph for visualization
 
 import scapy.all
 import matplotlib
+import numpy
 
 import matplotlib.pyplot as plt
 plt.switch_backend('agg')
@@ -20,43 +21,42 @@ class Monitor(object):
         self.__timeval       = 1
 
         self.__self_ip       = "129.22.150.112"
-
-        self.__invalid_count = 0
         self.__result_list   = []
 
     def __sniff_callback(self, packet):
-        if scapy.all.IP in packet and scapy.all.UDP in packet and packet[scapy.all.IP].src == self.__self_ip:
+        if 2048 <= packet[scapy.all.UDP].sport <= 2053:
             self.__sent_rate += 1
 
-    def sniff_sniff(self):
+    def __sniff(self):
         while(True):
-            scapy.all.sniff(iface="eth0", prn=self.__sniff_callback, timeout=self.__timeval)
-
-            if self.__sent_rate == 0:
-                self.__invalid_count += 1
-
-            else:
-                self.__invalid_count = 0
-
+            scapy.all.sniff(filter="udp", iface="eth0", prn=self.__sniff_callback, timeout=self.__timeval)
             self.__result_list.append(self.__sent_rate)
 
-            if self.__invalid_count == 10:
-                break
+            if all(m == 0 for m in self.__result_list[-10:]): break
 
             self.__sent_rate = 0
 
         self.__generate_graph()
 
-        exit()
+        print("Monitor Exiting")
+
+    def sniff_sniff(self):
+        return self.__sniff()
 
     def __generate_graph(self):
         with plt.style.context('ggplot', after_reset=True):
 
-            plt.title("The packet sent rate changes")
-            plt.xlabel("Timeline (sec)")
-            plt.ylabel("Packet Sent Rate (packet/sec)")
+            title_font = {"fontname":"Helvetica", "fontsize":14}
+            body_font  = {"fontname":"Helvetica"}
 
-            plt.plot(list(range(len(self.__result_list))), self.__result_list, label="Packet sent rate")
+            plt.title("Packet Sent Rate Change \n(Avg Rate: %d Packet/Sec, Max Rate: %d Packet/Sec)"\
+            %(int(numpy.average(self.__result_list)), int(max(self.__result_list))), **title_font)
+
+
+            plt.xlabel("Timeline (sec)", **body_font)
+            plt.ylabel("Packet Sent Rate (packet/sec)", **body_font)
+
+            plt.plot(list(range(len(self.__result_list))), self.__result_list, label="DNS Packet Sent Rate In eth0 Interface (packet/sec)")
             plt.legend(loc='upper right')
-            
+
             plt.savefig("sent_rate.png", dpi=300)
