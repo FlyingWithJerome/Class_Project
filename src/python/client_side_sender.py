@@ -22,7 +22,7 @@ class ClientSideSender(object):
             self.__file_handler = open(log, "r")
         
         self.__csv_handler   = csv.DictReader(self.__file_handler)
-        self.__outbound_sock = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_UDP)
+        self.__outbound_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         self.__outbound_sock.bind(("", 2048))
         self.__outbound_sock.setblocking(0)
 
@@ -54,6 +54,17 @@ class ClientSideSender(object):
             print("IP", ip_address, "Done...")
         
         self.__cleanup()
+
+    # @staticmethod
+    # def spoof_header(packet) -> bytes:
+    #     '''
+    #     rewrite the UDP header so that the response will be
+    #     sent to another socket
+    #     '''
+    #     length = 8 + len(packet)
+    #     udp_header = struct.pack("!4H", 2048, 53, length, 0)
+
+    #     return udp_header + packet
 
     @staticmethod
     def translate_name(basename="yumi.ipl.eecs.case.edu", ip_address="0.0.0.0"):
