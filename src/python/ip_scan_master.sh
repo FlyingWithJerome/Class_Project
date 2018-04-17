@@ -17,9 +17,9 @@ python_execution(){
 tcp_dump(){
     rm -f cap.txt
     if [ "$tmux" == "tmux" ]; then
-        tcpdump -i eth0 -B 40960 src 129.22.150.112 and udp > cap.txt
+        ./gulp -i eth0 -d | tcpdump -i eth0 -B 40960 src 129.22.150.112 and udp > cap.txt
     else
-        sudo tcpdump -i eth0 -B 40960 src 129.22.150.112 and udp > cap.txt
+        sudo ./gulp -i eth0 -d | tcpdump -i eth0 -B 40960 src 129.22.150.112 and udp > cap.txt
     fi
 }
 
