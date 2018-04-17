@@ -20,7 +20,7 @@ import struct
 import time
 import multiprocessing
 
-import self_dns
+import ip_scan_packet
 from ip_scan_result import Result
 from ip_scan_monitor import Monitor
 
@@ -82,7 +82,7 @@ class Query(object):
 
         self.__prepare_socket_factory(port_num)
 
-        self.__packet    = self_dns.make_dns_packet("one.yumi.ipl.eecs.case.edu")
+        self.__packet    = ip_scan_packet.make_dns_packet("one.yumi.ipl.eecs.case.edu")
         self.__udp_spoofing(port_num)
 
         self.__start_from = ipaddress.IPv4Address(start_ip)
@@ -216,7 +216,7 @@ class Listener(object):
                 if self.__filter(ipaddress.IPv4Address(source)):
                     dns_length = len(data) - 28
                     try:
-                        status     = self_dns.read_dns_response(data[28:])["RCode"]
+                        status     = ip_scan_packet.read_dns_response(data[28:])["RCode"]
 
                         self.__output_object.append_result([str(source), str(dns_length), status])
                     except struct.error:
