@@ -68,7 +68,7 @@ class ClientSideSender(object):
 
     @staticmethod
     def translate_name(basename="yumi.ipl.eecs.case.edu", ip_address="0.0.0.0"):
-        return "-".join(ip_address.split(".")) + basename
+        return "-".join(ip_address.split(".")) + "." + basename
 
     def __del__(self):
         if not self.__cleaned:
