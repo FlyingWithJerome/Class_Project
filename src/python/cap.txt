@@ -1,0 +1,271 @@
+Dumping statistics on /proc/net/pf_ring/stats/26230-eth0.18
+=========================
+Absolute Stats: [9 pkts total][0 pkts dropped][0.0% dropped]
+[9 pkts rcvd][963 bytes rcvd]
+=========================
+
+=========================
+Absolute Stats: [2'830 pkts total][0 pkts dropped][0.0% dropped]
+[2'830 pkts rcvd][311'057 bytes rcvd][2'829.73 pkt/sec][2.49 Mbit/sec]
+=========================
+Actual Stats: [2'821 pkts rcvd][1'000.09 ms][2'820.73 pps][0.00 Gbps]
+=========================
+
+=========================
+Absolute Stats: [7'155 pkts total][0 pkts dropped][0.0% dropped]
+[7'155 pkts rcvd][786'475 bytes rcvd][3'577.18 pkt/sec][3.15 Mbit/sec]
+=========================
+Actual Stats: [4'325 pkts rcvd][1'000.08 ms][4'324.64 pps][0.00 Gbps]
+=========================
+
+=========================
+Absolute Stats: [11'870 pkts total][0 pkts dropped][0.0% dropped]
+[11'870 pkts rcvd][1'304'994 bytes rcvd][3'956.32 pkt/sec][3.48 Mbit/sec]
+=========================
+Actual Stats: [4'715 pkts rcvd][1'000.08 ms][4'714.60 pps][0.00 Gbps]
+=========================
+
+=========================
+Absolute Stats: [16'700 pkts total][0 pkts dropped][0.0% dropped]
+[16'700 pkts rcvd][1'836'237 bytes rcvd][4'174.64 pkt/sec][3.67 Mbit/sec]
+=========================
+Actual Stats: [4'830 pkts rcvd][1'000.08 ms][4'829.59 pps][0.00 Gbps]
+=========================
+
+=========================
+Absolute Stats: [21'387 pkts total][0 pkts dropped][0.0% dropped]
+[21'387 pkts rcvd][2'351'745 bytes rcvd][4'277.03 pkt/sec][3.76 Mbit/sec]
+=========================
+Actual Stats: [4'687 pkts rcvd][1'000.08 ms][4'686.59 pps][0.00 Gbps]
+=========================
+
+=========================
+Absolute Stats: [25'916 pkts total][0 pkts dropped][0.0% dropped]
+[25'916 pkts rcvd][2'849'885 bytes rcvd][4'318.96 pkt/sec][3.80 Mbit/sec]
+=========================
+Actual Stats: [4'529 pkts rcvd][1'000.07 ms][4'528.64 pps][0.00 Gbps]
+=========================
+
+=========================
+Absolute Stats: [30'471 pkts total][0 pkts dropped][0.0% dropped]
+[30'471 pkts rcvd][3'350'888 bytes rcvd][4'352.63 pkt/sec][3.83 Mbit/sec]
+=========================
+Actual Stats: [4'555 pkts rcvd][1'000.08 ms][4'554.63 pps][0.00 Gbps]
+=========================
+
+=========================
+Absolute Stats: [35'025 pkts total][0 pkts dropped][0.0% dropped]
+[35'025 pkts rcvd][3'851'756 bytes rcvd][4'377.75 pkt/sec][3.85 Mbit/sec]
+=========================
+Actual Stats: [4'554 pkts rcvd][1'000.08 ms][4'553.60 pps][0.00 Gbps]
+=========================
+
+=========================
+Absolute Stats: [38'635 pkts total][0 pkts dropped][0.0% dropped]
+[38'635 pkts rcvd][4'247'801 bytes rcvd][4'292.42 pkt/sec][3.78 Mbit/sec]
+=========================
+Actual Stats: [3'610 pkts rcvd][1'000.07 ms][3'609.74 pps][0.00 Gbps]
+=========================
+
+=========================
+Absolute Stats: [42'387 pkts total][0 pkts dropped][0.0% dropped]
+[42'387 pkts rcvd][4'659'396 bytes rcvd][4'238.35 pkt/sec][3.73 Mbit/sec]
+=========================
+Actual Stats: [3'752 pkts rcvd][1'000.07 ms][3'751.71 pps][0.00 Gbps]
+=========================
+
+=========================
+Absolute Stats: [47'054 pkts total][0 pkts dropped][0.0% dropped]
+[47'054 pkts rcvd][5'172'719 bytes rcvd][4'277.28 pkt/sec][3.76 Mbit/sec]
+=========================
+Actual Stats: [4'667 pkts rcvd][1'000.08 ms][4'666.60 pps][0.00 Gbps]
+=========================
+
+=========================
+Absolute Stats: [51'529 pkts total][0 pkts dropped][0.0% dropped]
+[51'529 pkts rcvd][5'664'916 bytes rcvd][4'293.72 pkt/sec][3.78 Mbit/sec]
+=========================
+Actual Stats: [4'475 pkts rcvd][1'000.08 ms][4'474.63 pps][0.00 Gbps]
+=========================
+
+=========================
+Absolute Stats: [55'740 pkts total][0 pkts dropped][0.0% dropped]
+[55'740 pkts rcvd][6'128'024 bytes rcvd][4'287.34 pkt/sec][3.77 Mbit/sec]
+=========================
+Actual Stats: [4'211 pkts rcvd][1'000.07 ms][4'210.66 pps][0.00 Gbps]
+=========================
+
+=========================
+Absolute Stats: [60'208 pkts total][0 pkts dropped][0.0% dropped]
+[60'208 pkts rcvd][6'619'484 bytes rcvd][4'300.21 pkt/sec][3.78 Mbit/sec]
+=========================
+Actual Stats: [4'468 pkts rcvd][1'000.09 ms][4'467.55 pps][0.00 Gbps]
+=========================
+
+=========================
+Absolute Stats: [64'796 pkts total][0 pkts dropped][0.0% dropped]
+[64'796 pkts rcvd][7'124'117 bytes rcvd][4'319.15 pkt/sec][3.80 Mbit/sec]
+=========================
+Actual Stats: [4'588 pkts rcvd][1'000.83 ms][4'584.17 pps][0.00 Gbps]
+=========================
+
+=========================
+Absolute Stats: [66'792 pkts total][0 pkts dropped][0.0% dropped]
+[66'792 pkts rcvd][7'343'635 bytes rcvd][4'173.92 pkt/sec][3.67 Mbit/sec]
+=========================
+Actual Stats: [1'996 pkts rcvd][1'000.18 ms][1'995.62 pps][0.00 Gbps]
+=========================
+
+=========================
+Absolute Stats: [66'857 pkts total][0 pkts dropped][0.0% dropped]
+[66'857 pkts rcvd][7'350'680 bytes rcvd][3'932.21 pkt/sec][3.46 Mbit/sec]
+=========================
+Actual Stats: [65 pkts rcvd][1'000.19 ms][64.99 pps][0.00 Gbps]
+=========================
+
+=========================
+Absolute Stats: [66'877 pkts total][0 pkts dropped][0.0% dropped]
+[66'877 pkts rcvd][7'352'829 bytes rcvd][3'714.85 pkt/sec][3.27 Mbit/sec]
+=========================
+Actual Stats: [20 pkts rcvd][1'000.18 ms][20.00 pps][0.00 Gbps]
+=========================
+
+=========================
+Absolute Stats: [66'911 pkts total][0 pkts dropped][0.0% dropped]
+[66'911 pkts rcvd][7'356'476 bytes rcvd][3'521.11 pkt/sec][3.10 Mbit/sec]
+=========================
+Actual Stats: [34 pkts rcvd][1'000.23 ms][33.99 pps][0.00 Gbps]
+=========================
+
+=========================
+Absolute Stats: [66'931 pkts total][0 pkts dropped][0.0% dropped]
+[66'931 pkts rcvd][7'358'625 bytes rcvd][3'346.04 pkt/sec][2.94 Mbit/sec]
+=========================
+Actual Stats: [20 pkts rcvd][1'000.20 ms][20.00 pps][0.00 Gbps]
+=========================
+
+=========================
+Absolute Stats: [66'962 pkts total][0 pkts dropped][0.0% dropped]
+[66'962 pkts rcvd][7'361'956 bytes rcvd][3'188.17 pkt/sec][2.80 Mbit/sec]
+=========================
+Actual Stats: [31 pkts rcvd][1'000.19 ms][30.99 pps][0.00 Gbps]
+=========================
+
+=========================
+Absolute Stats: [66'999 pkts total][0 pkts dropped][0.0% dropped]
+[66'999 pkts rcvd][7'365'925 bytes rcvd][3'044.93 pkt/sec][2.68 Mbit/sec]
+=========================
+Actual Stats: [37 pkts rcvd][1'000.19 ms][36.99 pps][0.00 Gbps]
+=========================
+
+=========================
+Absolute Stats: [67'014 pkts total][0 pkts dropped][0.0% dropped]
+[67'014 pkts rcvd][7'367'539 bytes rcvd][2'913.19 pkt/sec][2.56 Mbit/sec]
+=========================
+Actual Stats: [15 pkts rcvd][1'000.19 ms][15.00 pps][0.00 Gbps]
+=========================
+
+=========================
+Absolute Stats: [67'014 pkts total][0 pkts dropped][0.0% dropped]
+[67'014 pkts rcvd][7'367'539 bytes rcvd][2'791.81 pkt/sec][2.46 Mbit/sec]
+=========================
+Actual Stats: [0 pkts rcvd][1'000.17 ms][0.00 pps][0.00 Gbps]
+=========================
+
+=========================
+Absolute Stats: [67'019 pkts total][0 pkts dropped][0.0% dropped]
+[67'019 pkts rcvd][7'368'079 bytes rcvd][2'680.34 pkt/sec][2.36 Mbit/sec]
+=========================
+Actual Stats: [5 pkts rcvd][1'000.15 ms][5.00 pps][0.00 Gbps]
+=========================
+
+=========================
+Absolute Stats: [67'044 pkts total][0 pkts dropped][0.0% dropped]
+[67'044 pkts rcvd][7'370'764 bytes rcvd][2'578.20 pkt/sec][2.27 Mbit/sec]
+=========================
+Actual Stats: [25 pkts rcvd][1'000.18 ms][25.00 pps][0.00 Gbps]
+=========================
+
+=========================
+Absolute Stats: [67'063 pkts total][0 pkts dropped][0.0% dropped]
+[67'063 pkts rcvd][7'372'807 bytes rcvd][2'483.42 pkt/sec][2.18 Mbit/sec]
+=========================
+Actual Stats: [19 pkts rcvd][1'000.18 ms][19.00 pps][0.00 Gbps]
+=========================
+
+=========================
+Absolute Stats: [67'069 pkts total][0 pkts dropped][0.0% dropped]
+[67'069 pkts rcvd][7'373'456 bytes rcvd][2'394.93 pkt/sec][2.11 Mbit/sec]
+=========================
+Actual Stats: [6 pkts rcvd][1'000.21 ms][6.00 pps][0.00 Gbps]
+=========================
+
+=========================
+Absolute Stats: [67'098 pkts total][0 pkts dropped][0.0% dropped]
+[67'098 pkts rcvd][7'376'569 bytes rcvd][2'313.34 pkt/sec][2.03 Mbit/sec]
+=========================
+Actual Stats: [29 pkts rcvd][1'000.19 ms][28.99 pps][0.00 Gbps]
+=========================
+
+=========================
+Absolute Stats: [67'185 pkts total][0 pkts dropped][0.0% dropped]
+[67'185 pkts rcvd][7'385'898 bytes rcvd][2'239.13 pkt/sec][1.97 Mbit/sec]
+=========================
+Actual Stats: [87 pkts rcvd][1'000.18 ms][86.98 pps][0.00 Gbps]
+=========================
+
+=========================
+Absolute Stats: [67'194 pkts total][0 pkts dropped][0.0% dropped]
+[67'194 pkts rcvd][7'386'861 bytes rcvd][2'167.19 pkt/sec][1.91 Mbit/sec]
+=========================
+Actual Stats: [9 pkts rcvd][1'000.22 ms][9.00 pps][0.00 Gbps]
+=========================
+
+=========================
+Absolute Stats: [67'203 pkts total][0 pkts dropped][0.0% dropped]
+[67'203 pkts rcvd][7'387'824 bytes rcvd][2'099.74 pkt/sec][1.85 Mbit/sec]
+=========================
+Actual Stats: [9 pkts rcvd][1'000.18 ms][9.00 pps][0.00 Gbps]
+=========================
+
+=========================
+Absolute Stats: [67'212 pkts total][0 pkts dropped][0.0% dropped]
+[67'212 pkts rcvd][7'388'787 bytes rcvd][2'036.38 pkt/sec][1.79 Mbit/sec]
+=========================
+Actual Stats: [9 pkts rcvd][1'000.19 ms][9.00 pps][0.00 Gbps]
+=========================
+
+=========================
+Absolute Stats: [67'221 pkts total][0 pkts dropped][0.0% dropped]
+[67'221 pkts rcvd][7'389'750 bytes rcvd][1'976.75 pkt/sec][1.74 Mbit/sec]
+=========================
+Actual Stats: [9 pkts rcvd][1'000.18 ms][9.00 pps][0.00 Gbps]
+=========================
+
+=========================
+Absolute Stats: [67'237 pkts total][0 pkts dropped][0.0% dropped]
+[67'237 pkts rcvd][7'391'457 bytes rcvd][1'920.73 pkt/sec][1.69 Mbit/sec]
+=========================
+Actual Stats: [16 pkts rcvd][1'000.18 ms][16.00 pps][0.00 Gbps]
+=========================
+
+=========================
+Absolute Stats: [67'265 pkts total][0 pkts dropped][0.0% dropped]
+[67'265 pkts rcvd][7'394'453 bytes rcvd][1'868.15 pkt/sec][1.64 Mbit/sec]
+=========================
+Actual Stats: [28 pkts rcvd][1'000.20 ms][27.99 pps][0.00 Gbps]
+=========================
+
+Leaving...
+=========================
+Absolute Stats: [67'283 pkts total][0 pkts dropped][0.0% dropped]
+[67'283 pkts rcvd][7'396'379 bytes rcvd][1'833.49 pkt/sec][1.61 Mbit/sec]
+=========================
+Actual Stats: [18 pkts rcvd][690.54 ms][26.07 pps][0.00 Gbps]
+=========================
+
+Using PF_RING v.7.1.0
+Capturing from eth0 [mac: 00:22:19:59:95:1F][if_index: 2][speed: 1000Mb/s]
+# Device RX channels: 4
+# Polling threads:    1
+Successfully set BPF filter 'src 129.22.150.112 and udp'
