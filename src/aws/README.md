@@ -1,3 +1,7 @@
+# Function:
+
+This folder is used to test whether there is a firewall or middlebox that limits DNS request between some networks. 'aws_scan_client.py' is used to query and 'aws_scan_server.py' is used to receive packets and do statistics.
+
 ##  To access your instance:
 
 1. Open an SSH client. (find out how to connect using PuTTY)
