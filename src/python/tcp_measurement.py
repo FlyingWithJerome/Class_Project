@@ -4,6 +4,7 @@ on genuine open resolvers
 '''
 import csv
 import subprocess
+import sys
 
 # import scapy.all as network
 
@@ -91,5 +92,5 @@ def print_wrapper(msg, status="OK"):
 
 
 if __name__ == "__main__":
-    for line in load_from_server_log():
+    for line in load_from_server_log(sys.argv[1]):
         check_all_mode(line)

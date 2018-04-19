@@ -78,6 +78,14 @@ class Query(object):
             start_ip = ipaddress.IPv4Address(start_ip)
             end_ip   = ipaddress.IPv4Address(end_ip)
 
+        fake_network = [net for net in ipaddress.summarize_address_range(start_ip, end_ip)]
+
+        skip_list = SkipList()
+        for net in skip_list.skip_list:
+            if fake_network[0].overlaps(net):
+                self.__queue.put(_END_SIGNAL)
+                exit(-1)
+
         self.__ip_range = range(int(start_ip), int(end_ip))        
 
         self.__prepare_socket_factory(port_num)
@@ -124,15 +132,14 @@ class Query(object):
         '''
         Nothing exciting, just a loop
         '''
-        skip_list = SkipList()
         
         ip_range = self.__ip_range if not range_ else range_
             
         try:
             self.__queue.put(_BEGIN_SIGNAL)
             for ip in ip_range:
-                if skip_list.is_valid(ipaddress.IPv4Address(ip)):
-                    self.__launch_query(ipaddress.IPv4Address(ip))
+                # if skip_list.is_valid(ipaddress.IPv4Address(ip)):
+                self.__launch_query(ipaddress.IPv4Address(ip))
 
         except KeyboardInterrupt:
             pass
@@ -170,6 +177,7 @@ class Listener(object):
         end_ip   = ipaddress.IPv4Address(end_ip)
 
         self.__ip_range = range(int(start_ip), int(end_ip))
+        
         self.__start_from = str(ipaddress.IPv4Address(start_ip))
         self.__end_to     = str(ipaddress.IPv4Address(end_ip) - 1)
 
