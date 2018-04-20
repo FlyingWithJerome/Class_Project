@@ -1,6 +1,23 @@
+
+import concurrent.future
 import sys
 import csv
 import subprocess
+
+def wrapper(webname:[str]) -> [[str, str, str],]:
+    results = []
+    for name in webname:
+        try:
+            nameserver_str = subprocess.check_output(["dig",name,"NS","+short"]).decode().split("\n")[0]
+            if nameserver_str:
+                nameserver_ip = subprocess.check_output(["dig",shell_output1,"+short"]).decode().split("\n")[0]\
+                if nameserver_ip:
+                    results.append([name, nameserver_str, nameserver_ip])
+                    
+        except subprocess.CalledProcessError:
+            pass
+
+    return results
 
 if __name__ == '__main__':
     namelist = [];
