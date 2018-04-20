@@ -21,7 +21,7 @@ class Sender(threading.Thread):
         last_remaining = remaining;
         while remaining:
             out_packet = self_dns.make_dns_packet(self.website_list[length-remaining]);
-            self.transport_socket.sendto(out_packet,('8.8.4.4',53));
+            self.transport_socket.sendto(out_packet,('8.8.8.8',53));
             remaining = remaining - 1;
             now = time.time()
             if((now-start)>1):
