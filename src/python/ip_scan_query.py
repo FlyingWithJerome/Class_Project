@@ -90,7 +90,7 @@ class Query(object):
 
         self.__prepare_socket_factory(port_num)
 
-        self.__packet    = ip_scan_packet.make_dns_packet("one.yumi.ipl.eecs.case.edu")
+        self.__packet    = ip_scan_packet.make_dns_packet("one-email-yxm319-case-edu.yumi.ipl.eecs.case.edu")
         self.__udp_spoofing(port_num)
 
         self.__start_from = ipaddress.IPv4Address(start_ip)
