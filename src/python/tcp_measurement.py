@@ -25,7 +25,7 @@ def check_all_mode(ip_address:str) -> None:
             print_wrapper("check on mode {}...".format(mode), status="OK")
             result =\
             subprocess.check_output(
-                "dig {}.yumi.ipl.eecs.case.edu @{}"\
+                "dig {}-email-yxm319-case-edu.yumi.ipl.eecs.case.edu @{} +tcp"\
                 .format(mode, ip_address)\
                 .split(" ")
             ).decode()
