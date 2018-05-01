@@ -79,7 +79,7 @@ class Query(object):
             end_ip   = ipaddress.IPv4Address(end_ip)
 
         fake_network = [net for net in ipaddress.summarize_address_range(start_ip, end_ip)]
-
+#TODO: make the net exclude skiplist
         skip_list = SkipList()
         for net in skip_list.skip_list:
             if fake_network[0].overlaps(net):
