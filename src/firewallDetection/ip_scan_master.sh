@@ -29,5 +29,5 @@ python_execution &
 tcp_dump &
 wait -n
 
-#python3 ip_scan_draw_fig.py
+python3 ip_scan_draw_fig.py
 kill 0

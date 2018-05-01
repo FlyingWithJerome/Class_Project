@@ -223,12 +223,13 @@ class Listener(object):
                 
                 if self.__filter(ipaddress.IPv4Address(source)):
                     dns_length = len(data) - 28
+                    
                     try:
                         status     = ip_scan_packet.read_dns_response(data[28:])["RCode"]
 
-                        self.__output_object.append_result([str(source), str(dns_length), status])
+                        self.__output_object.append_result([str(source), str(dns_length), status, str(time.time())])
                     except struct.error:
-                        self.__output_object.append_result([str(source), str(dns_length), "Unpack ERROR"])
+                        self.__output_object.append_result([str(source), str(dns_length), "Unpack ERROR", str(time.time())])
                     start_time = time.time()
                     self.__find_result += 1
 
