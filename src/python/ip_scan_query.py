@@ -62,6 +62,7 @@ def monitor_wrapper(kwargs):
     return monitor_obj.sniff_sniff()
 
 
+
 class Query(object):
     '''
     This class does quering in a single process
@@ -80,13 +81,11 @@ class Query(object):
 
         fake_network = [net for net in ipaddress.summarize_address_range(start_ip, end_ip)]
 #TODO: make the net exclude skiplist
-        skip_list = SkipList()
-        for net in skip_list.skip_list:
-            if fake_network[0].overlaps(net):
-                self.__queue.put(_END_SIGNAL)
-                exit(-1)
+        
+        #Check the skip list:
+        ip_range = SkipList.check_skiplist(fake_network);
 
-        self.__ip_range = range(int(start_ip), int(end_ip))        
+        self.__ip_range = ip_range
 
         self.__prepare_socket_factory(port_num)
 
@@ -97,6 +96,7 @@ class Query(object):
         self.__end_to     = ipaddress.IPv4Address(end_ip) - 1
 
         self.__queue = queue_
+        self.__counter = 0
 
         self.__start_time = time.time()
 
@@ -137,19 +137,23 @@ class Query(object):
             
         try:
             self.__queue.put(_BEGIN_SIGNAL)
-            for ip in ip_range:
+            for ip_network in ip_range:
+                for ip in ip_network:
                 # if skip_list.is_valid(ipaddress.IPv4Address(ip)):
-                self.__launch_query(ipaddress.IPv4Address(ip))
+                    self.__counter += 1
+                    self.__launch_query(ip)
 
-        except KeyboardInterrupt:
+        except (KeyboardInterrupt, PermissionError):
             pass
+        except Exception as e:
+            print(e)
 
         self.__queue.put(_END_SIGNAL)
 
     def __del__(self):
         self.__output_socket.close()
 
-        print("Send {} packets from {} to {} for {:4.2f} s".format(int(self.__end_to)-int(self.__start_from),
+        print("Send {} packets from {} to {} for {:4.2f} s".format(self.__counter,
             str(self.__start_from),
             str(self.__end_to),
             time.time()-self.__start_time))
@@ -176,7 +180,9 @@ class Listener(object):
         start_ip = ipaddress.IPv4Address(start_ip)
         end_ip   = ipaddress.IPv4Address(end_ip)
 
-        self.__ip_range = range(int(start_ip), int(end_ip))
+        ip_range = SkipList.check_skiplist([net for net in ipaddress.summarize_address_range(start_ip, end_ip)])
+
+        self.__ip_range = ip_range
         
         self.__start_from = str(ipaddress.IPv4Address(start_ip))
         self.__end_to     = str(ipaddress.IPv4Address(end_ip) - 1)
@@ -196,8 +202,11 @@ class Listener(object):
         for meaningless in skip:
             if IPaddress in meaningless:
                 return False
-
-        return int(IPaddress) in self.__ip_range
+        
+        for net in self.__ip_range:
+            if IPaddress in net:
+                return True;
+        return False
 
 
     def __read_from_socket(self, timeout=20) -> None:
@@ -424,6 +433,24 @@ class SkipList(object):
             if ip_address in ipaddress.IPv4Network(tricky_ip):
                 return False
         return True
+
+    @staticmethod
+    def check_skiplist(fake_network):
+        ip_range = set()
+        for net in SkipList.skip_list:
+            for i in range(len(fake_network)):
+                if fake_network[i].overlaps(net):
+                    try:
+                        temp_network = fake_network[i].address_exclude(net)
+                        temp_network = list(temp_network)
+                        for j in range(len(temp_network)):
+                            ip_range.add(temp_network[j])
+                    except ValueError:
+                        ip_range.add(fake_network[i])
+                else:
+                    ip_range.add(fake_network[i])
+        print("check skip list done")
+        return ip_range
 
 
 if __name__ == "__main__":

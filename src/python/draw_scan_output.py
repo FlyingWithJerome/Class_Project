@@ -1,10 +1,11 @@
 import matplotlib
+import sys
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 time_list = [];
 num_list = [];
-with open('scan_output.csv','r') as file:
+with open(sys.argv[1],'r') as file:
     title = file.readline();
     line = file.readline()
     while len(line):
@@ -25,4 +26,4 @@ with open('scan_output.csv','r') as file:
 
     plt.plot([x[0] for x in overall],[x[1] for x in overall])
     
-    plt.savefig('scan_output.png')
+    plt.savefig(sys.argv[2])
