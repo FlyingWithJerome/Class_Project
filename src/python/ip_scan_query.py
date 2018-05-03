@@ -139,7 +139,6 @@ class Query(object):
             self.__queue.put(_BEGIN_SIGNAL)
             for ip_network in ip_range:
                 for ip in ip_network:
-                # if skip_list.is_valid(ipaddress.IPv4Address(ip)):
                     self.__counter += 1
                     self.__launch_query(ip)
 
@@ -187,6 +186,8 @@ class Listener(object):
         self.__start_from = str(ipaddress.IPv4Address(start_ip))
         self.__end_to     = str(ipaddress.IPv4Address(end_ip) - 1)
 
+        self.__meaningless = [ipaddress.IPv4Network("129.22.151.0/24"),]
+
         self.__find_result = 0
         self.__had_cleaned = False
         self.__start_time = time.time()
@@ -198,8 +199,8 @@ class Listener(object):
         False: meaningless
         True: meaningful
         '''
-        skip = [ipaddress.IPv4Network("129.22.151.0/24"),]
-        for meaningless in skip:
+        
+        for meaningless in self.__meaningless:
             if IPaddress in meaningless:
                 return False
         
@@ -209,7 +210,7 @@ class Listener(object):
         return False
 
 
-    def __read_from_socket(self, timeout=20) -> None:
+    def __read_from_socket(self, timeout=15) -> None:
         '''
         selecting/polling the socket until timeout
         '''
@@ -234,19 +235,18 @@ class Listener(object):
                     dns_length = len(data) - 28
                     
                     try:
-                        status     = ip_scan_packet.read_dns_response(data[28:])["RCode"]
+                        status = ip_scan_packet.read_dns_response(data[28:])["RCode"]
 
                         self.__output_object.append_result([str(source), str(dns_length), status, str(time.time())])
                     except struct.error:
                         self.__output_object.append_result([str(source), str(dns_length), "Unpack ERROR", str(time.time())])
-                    start_time = time.time()
+                    # start_time = time.time()
                     self.__find_result += 1
 
                 if not query_ends:
                     signal = self.__queue.get_nowait()
                     if signal == _END_SIGNAL:
                         start_time = time.time()
-                    # print("Permit to exit")
                     query_ends = True
 
                 time_now = time.time()

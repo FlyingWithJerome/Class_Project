@@ -8,6 +8,9 @@ output to a csv
 import glob
 import os
 
+import MySQLdb
+import _mysql_exceptions
+
 def merge_files(final_output:str, file_pattern:str):
     '''
     merge all the files into one single output
@@ -36,6 +39,11 @@ class Result(object):
 
         self.__file_existed = False
 
+        self.__database = MySQLdb.connect("localhost", "root", "", "dns_scan_records")
+        self.__database.autocommit(True)
+        self.__master_cursor = self.__database.cursor()
+        self.__master_cursor.execute("TRUNCATE TABLE result")
+
     def append_result(self, list_of_result:list) -> None:
         '''
         append results to the output list, waiting to be flushed
@@ -48,6 +56,31 @@ class Result(object):
                 "Time"              : list_of_result[3]
             }
         )
+
+        query = '''INSERT INTO result
+        (
+            ip_address,
+            packet_length,
+            response_status,
+            response_time
+        )
+        VALUES
+        (
+            "{ip}",
+            {pack_len},
+            "{status}",
+            "{time_}"
+        )
+        '''.format(
+            ip       = list_of_result[0],
+            pack_len = list_of_result[1],
+            status   = list_of_result[2],
+            time_    = list_of_result[3]
+        )
+        try:
+            self.__master_cursor.execute(query) 
+        except _mysql_exceptions.IntegrityError:
+            self.__database.rollback()
 
         if len(self.__result_list) == self.__threshold:
             self.__flush()
@@ -87,6 +120,8 @@ class Result(object):
                     out.write(",".join([members["IP address"], members["DNS Packet Length"], members["Response Status"], members["Time"]]) + "\n")
 
     def __del__(self):
+        self.__database.close()
+
         if len(self.__result_list) > 0:
             self.__flush()
 
