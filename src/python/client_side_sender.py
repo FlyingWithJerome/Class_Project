@@ -9,6 +9,7 @@ import csv
 import socket
 import struct
 import sys
+import time
 
 import ip_scan_packet
 
@@ -51,6 +52,7 @@ class ClientSideSender(object):
             packet   = ip_scan_packet.make_dns_packet(question)
 
             self.__outbound_sock.sendto(packet, (ip_address, 53))
+            time.sleep(0.002)# limit speed to 500 pps
             print("IP", ip_address, "Done...")
         
         self.__cleanup()
