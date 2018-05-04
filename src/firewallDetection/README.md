@@ -26,6 +26,7 @@ ec2-18-188-87-197.us-east-2.compute.amazonaws.com
 
 ```bash
 ssh -i "AWS_1.pem" ubuntu@ec2-18-188-87-197.us-east-2.compute.amazonaws.com
+ssh -i "AWS_2.pem" ubuntu@ec2-52-15-214-157.us-east-2.compute.amazonaws.com
 ```
 
 Please note that in most cases the username above will be correct, however please ensure that you read your AMI usage instructions to ensure that the AMI owner has not changed the default AMI username.
