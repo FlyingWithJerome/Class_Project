@@ -4,6 +4,7 @@ import subprocess
 import struct
 import sys
 import random
+_EDNS_ENABLED = 1
 
 SKIP_LIST = [int(ipaddress.IPv4Address("0.0.0.0")),
         range(int(ipaddress.IPv4Address("192.168.0.1")),int(ipaddress.IPv4Address("192.168.255.255"))),
@@ -55,7 +56,30 @@ def make_dns_packet(questionWebsite):
 
     question_section = struct.pack("!%ds2H"%len(query_website), query_website, type_, class_)
 
-    return header + question_section
+    if _EDNS_ENABLED:
+        E_Name = 0x00 # Name: <ROOT>
+        E_Type = 0x0029 # Type: OPT(41)
+        E_payload_size = 0x1000 # UDP payload size: 4096
+        E_Higher_bits = 0x00 # Higher bits in extended RCODE: 0x00
+        E_Version = 0x00 # EDNS0 version: 0
+        E_Z = 0x00 # Z: 0x00
+        E_Data_length = 0x000c # Datalength: 12
+        E_Option_code = 0x0008 # Option Code: CSUBNET-Client subnet(8)
+        E_Option_length = 0x0006 # Option length:6
+        E_Family = 0x0001 # Family: IPv4
+        E_Source_netmask = 0x20 # Source Netmask: 16
+        E_Client_netmask = 0x00 # Scoupe Netmask: 0
+        E_Client_subnet = 0x81169670 # Client subnet: 129.22.150.112
+        EDNS_section = struct.pack("BHHBBBHHHHBBI",E_Name,E_Type,
+                                    E_payload_size,E_Higher_bits,
+                                    E_Version,E_Z,E_Data_length,
+                                    E_Option_code,E_Option_length,
+                                    E_Family,E_Source_netmask,
+                                    E_Client_netmask,E_Client_subnet)
+        return header + question_section + EDNS_section
+
+    else:
+        return header + question_section
 
 def class_reader(Class):
     types=  {0:'Reserved',1:'IN',3:'CH',4:'HS',
