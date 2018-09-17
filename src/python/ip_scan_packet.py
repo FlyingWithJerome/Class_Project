@@ -65,12 +65,12 @@ def make_dns_packet(questionWebsite):
         E_Z = 0x00 # Z: 0x00
         E_Data_length = 0x000c # Datalength: 12
         E_Option_code = 0x0008 # Option Code: CSUBNET-Client subnet(8)
-        E_Option_length = 0x0006 # Option length:6
+        E_Option_length = 0x0008 # Option length:6
         E_Family = 0x0001 # Family: IPv4
         E_Source_netmask = 0x20 # Source Netmask: 16
         E_Client_netmask = 0x00 # Scoupe Netmask: 0
         E_Client_subnet = 0x81169670 # Client subnet: 129.22.150.112
-        EDNS_section = struct.pack("BHHBBBHHHHBBI",E_Name,E_Type,
+        EDNS_section = struct.pack("!BHHBBBHHHHBBI",E_Name,E_Type,
                                     E_payload_size,E_Higher_bits,
                                     E_Version,E_Z,E_Data_length,
                                     E_Option_code,E_Option_length,
